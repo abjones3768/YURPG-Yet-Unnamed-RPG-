@@ -2,6 +2,9 @@ import random
 
 """
 TODO:
+- Define a set of rules for generating room interiors and create an interiorGen function
+  that creates interior walls/obstacles for each room in the dungeon
+- Create new tile types (chest, key, etc)
 - Function to generate enemies and items
 
 IDEA:
@@ -68,8 +71,8 @@ class Dungeon:
         self.cell_size = cell_size
         self.map_width = map_width
         self.map_height = map_height
-        self.total_rooms = 50
-        self.min_cell_size = cell_size//2
+        self.total_rooms = 80
+        self.min_cell_size = cell_size
         self.rooms = None
         self.player_tile = None
         self.tiles = self.generateDungeon()
@@ -90,18 +93,22 @@ class Dungeon:
                             room_A.v_neighbors.append(room_B)
 
     def createHCorridor(self, x1, x2, cy):
-        for y in range(cy-2, cy+2):
+        for y in range(cy-3, cy+2):
             for x in range(x1-1, x2+1):
-                if x == x1-1 or x == x2:
+                if y == cy-3 or y == cy+1:
+                    self.tiles[y * self.map_width + x] = 1
+                elif x == x1-1 or x == x2:
                     self.tiles[y * self.map_width + x] = 2
                 else:
                     self.tiles[y * self.map_width + x] = 0
 
 
     def createVCorridor(self, y1, y2, cx):
-        for x in range(cx-2, cx+2):
+        for x in range(cx-3, cx+2):
             for y in range(y1-1, y2+1):
-                if y == y1-1 or y == y2:
+                if x == cx-3 or x == cx+1:
+                    self.tiles[y * self.map_width + x] = 1
+                elif y == y1-1 or y == y2:
                     self.tiles[y * self.map_width + x] = 2
                 else:
                     self.tiles[y * self.map_width + x] = 0

@@ -1,24 +1,27 @@
 import pygame
 
 """
-Accepts a list of integers representing the tiles to render and
-converts world coordinates to viewport coordinates to allow only
-a viewport-sized section of the map centered on the player to be drawn
-to the screen on each frame
+TODO:
+- Create isometric rendering mode for combat that expands the current room
+- Rather than checking map[i] for tiletypes, create dict that maps integers
+  to colors (later modify to map integers to png paths)
 """
 
-def renderTilemap(dungeon, viewport_w, viewport_h, tile_size, surface):
-    player = dungeon.player_tile
-    map = dungeon.tiles
+def renderTilemap(dungeon, p, viewport_w, viewport_h, tile_size, surface):
     width = dungeon.map_width
-    vp_start_col = max(0, (player % width) - (viewport_w // 2))
-    vp_start_row = max(0, (player // width) - (viewport_h // 2))
-    vp_end_col = min(width, vp_start_col + viewport_w)
-    vp_end_row = min(dungeon.map_height, vp_start_row + viewport_h)
-    if vp_end_col - vp_start_col < viewport_w:
-        vp_start_col = vp_end_col - viewport_w
-    if vp_end_row - vp_start_row < viewport_h:
-        vp_start_row = vp_end_row - viewport_h
+    map = dungeon.tiles
+    px = p[0]
+    py = p[1]
+    vp_x = max(0, px - viewport_w * tile_size // 2)
+    vp_y = max(0, py - viewport_h * tile_size // 2)
+    vp_start_col = vp_x // tile_size
+    vp_start_row = vp_y // tile_size
+    vp_end_col = min(width, vp_start_col + viewport_w + 1)
+    vp_end_row = min(dungeon.map_height, vp_start_row + viewport_h + 1)
+    x_offset = (vp_start_col * tile_size) - vp_x
+    y_offset = (vp_start_row * tile_size) - vp_y
+    px -= (vp_start_col * tile_size)
+    py -= (vp_start_row * tile_size)
 
     # Convert each tile from world space to viewport space and draw to screen
     for row in range(vp_start_row, vp_end_row):
@@ -26,15 +29,14 @@ def renderTilemap(dungeon, viewport_w, viewport_h, tile_size, surface):
             i = row * width + col
             x = (col * tile_size) - (vp_start_col * tile_size)
             y = (row * tile_size) - (vp_start_row * tile_size)
-            if i == player:
-                color = (0, 0, 255)
-            elif map[i] == 0:
-                color = (0, 50, 0)
+            if map[i] == 0:
+                color = (125, 120, 130)
             elif map[i] == 1:
-                color = (255, 255, 255)
+                color = (94, 92, 100)
             elif map[i] == 2:
-                color = (139, 69, 19)
+                color = (125, 88, 55)
             else:
-                color = (0, 0, 0)
-            pygame.draw.rect(surface, color, pygame.Rect(x, y, tile_size, tile_size))
+                color = (36, 31, 49)
+            pygame.draw.rect(surface, color, pygame.Rect(x + x_offset, y + y_offset, tile_size, tile_size))
+    pygame.draw.rect(surface, (255, 0, 0), pygame.Rect(px + x_offset, py + y_offset, tile_size, tile_size))
     return vp_start_row * width + vp_start_col

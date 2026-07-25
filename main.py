@@ -8,13 +8,12 @@ from dungeon import Dungeon
 
 """
 TODO:
-- Make distinct player entity separate from dungeon and implement smooth inter-tile movement.
-  Also make the renderer draw player separately
-- Make 2 rendering modes - world map and viewport map - open world map by pressing 'm'
-- Implement player visibility radius. Any tiles blocked by wall or
+- Implement actor sight cone. Any tiles blocked by wall or
   outside visibility radius are black out
 - Implement algorithm for spawning enemies, items, and portal to reach next dungeon
 - Finish implementing state logic
+- Integrate with menus and combat system
+- Refactor code into functions where necessary
 """
 
 ### Constants ###
@@ -36,8 +35,8 @@ MOVING_STATE = 3
 pygame.init()
 viewport_cols = WIN_WIDTH // TILE_SIZE                          # viewport horizontal tile count
 viewport_rows = WIN_HEIGHT // TILE_SIZE                         # viewport vertical tile count
-dungeon_cols = viewport_cols * 5                                # dungeon horizontal tile count
-dungeon_rows = viewport_rows * 5                                # dungeon vertical tile count
+dungeon_cols = viewport_cols * 10                                # dungeon horizontal tile count
+dungeon_rows = viewport_rows * 10                                # dungeon vertical tile count
 game_state = EXPLORATION_STATE                                  # game state dictates what happens in game loop
 screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))       # surface to draw graphics to
 clock = pygame.time.Clock()                                     # game clock
@@ -52,13 +51,17 @@ move_dest = None
 
 # Procedurally generate a dungeon using binary spatial partitioning
 dungeon = Dungeon(TILE_SIZE, dungeon_cols, dungeon_rows)
+player = [
+    (dungeon.player_tile%dungeon_cols)*TILE_SIZE,
+    (dungeon.player_tile//dungeon_cols)*TILE_SIZE
+]
 
 # Game loop
 run = True
 while run:
     # On each frame, clear and redraw the screen
     screen.fill((0,0,0))
-    vp_pos = renderer.renderTilemap(dungeon, viewport_cols, viewport_rows, TILE_SIZE, screen)
+    vp_pos = renderer.renderTilemap(dungeon, player, viewport_cols, viewport_rows, TILE_SIZE, screen)
 
     # Display start menu on launch:
         # NEW GAME
@@ -96,6 +99,8 @@ while run:
             # Get clicked tile using click event position and
             # pass it to pathfinder
             if e.type == pygame.MOUSEBUTTONDOWN:
+
+                # Make this a function
                 viewport_col = vp_pos % dungeon_cols
                 viewport_row = vp_pos // dungeon_cols
                 dest_col = (int(e.pos[0]) // TILE_SIZE) + viewport_col
@@ -112,12 +117,25 @@ while run:
                     game_state = MOVING_STATE
                     move_start_time = pygame.time.get_ticks()
 
-    # If moving, make a step along the movement path every 2 milliseconds until destination tile is reached
     elif game_state == MOVING_STATE:
+
+        # Make this a function
         if move_step_count < len(move_path):
-            if pygame.time.get_ticks() - move_start_time > 25:
-                dungeon.player_tile = move_path[move_step_count]
-                move_step_count += 1
+            next_tile = move_path[move_step_count]
+            dx = (next_tile%dungeon_cols)*TILE_SIZE
+            dy = (next_tile//dungeon_cols)*TILE_SIZE
+            if pygame.time.get_ticks() - move_start_time > 10:
+                if dx > player[0]:
+                    player[0] = min(player[0] + 4, dx)
+                elif dx < player[0]:
+                    player[0] = max(player[0] - 4, dx)
+                elif dy > player[1]:
+                    player[1] = min(player[1] + 4, dy)
+                elif dy < player[1]:
+                    player[1] = max(player[1] - 4, dy)
+                if player[0] == dx and player[1] == dy:
+                    dungeon.player_tile = next_tile
+                    move_step_count += 1
                 move_start_time = pygame.time.get_ticks()
         else:
             game_state = EXPLORATION_STATE
