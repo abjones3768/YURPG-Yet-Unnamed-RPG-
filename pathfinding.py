@@ -2,6 +2,12 @@
 Use A* algorithm to calculate shortest path between start and dest tiles.
 Outputs a dictionary called 'node-map' that contains all tiles that were traversed.
 Each value in the dict has a parent that allows the path to be traversed.
+
+TODO:
+- Once shadowcaster is implemented it will be impossible to move through closed doors
+  without first opening them
+- Make it so if the tile you click on is part of a door, it stops you at the tile before
+  the door and then you click it again to open it, setting all the door tiles to floor tiles
 """
 
 def findPath(tilemap, dest):

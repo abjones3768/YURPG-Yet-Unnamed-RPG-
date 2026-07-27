@@ -8,11 +8,13 @@ from dungeon import Dungeon
 
 """
 TODO:
-- Implement actor sight cone. Any tiles blocked by wall or
-  outside visibility radius are black out
+- Finish dungeon template system
+- Implement isometric rendering mode for combat
+- Implement visibility module that has shadow casting function for FOV
 - Implement algorithm for spawning enemies, items, and portal to reach next dungeon
 - Finish implementing state logic
 - Integrate with menus and combat system
+- If time, create visfx module that does a simple portal vortex animation in the background
 - Refactor code into functions where necessary
 """
 
@@ -50,7 +52,10 @@ move_step_count = 0
 move_dest = None
 
 # Procedurally generate a dungeon using binary spatial partitioning
-dungeon = Dungeon(TILE_SIZE, dungeon_cols, dungeon_rows)
+dungeon = Dungeon(TILE_SIZE, 0, 0, dungeon_cols, dungeon_rows, 80)
+dungeon.generateDungeon()
+
+# Later change player to player object
 player = [
     (dungeon.player_tile%dungeon_cols)*TILE_SIZE,
     (dungeon.player_tile//dungeon_cols)*TILE_SIZE
@@ -60,7 +65,7 @@ player = [
 run = True
 while run:
     # On each frame, clear and redraw the screen
-    screen.fill((0,0,0))
+    screen.fill((36, 31, 49))
     vp_pos = renderer.renderTilemap(dungeon, player, viewport_cols, viewport_rows, TILE_SIZE, screen)
 
     # Display start menu on launch:
@@ -100,12 +105,15 @@ while run:
             # pass it to pathfinder
             if e.type == pygame.MOUSEBUTTONDOWN:
 
-                # Make this a function
+                # Make this a function with viewport position as input
+                # and destination tile as output that can be passed into
+                # pathfinder
                 viewport_col = vp_pos % dungeon_cols
                 viewport_row = vp_pos // dungeon_cols
                 dest_col = (int(e.pos[0]) // TILE_SIZE) + viewport_col
                 dest_row = (int(e.pos[1]) // TILE_SIZE) + viewport_row
                 move_dest = dest_row * dungeon_cols + dest_col
+
                 if dungeon.tiles[move_dest] == 0 or dungeon.tiles[move_dest] == 2:
                     move_path_nodes = pathfinding.findPath(dungeon, move_dest)
                     cur = move_dest

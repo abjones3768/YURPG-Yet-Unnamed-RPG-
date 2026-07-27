@@ -2,12 +2,20 @@ import pygame
 
 """
 TODO:
-- Create isometric rendering mode for combat that expands the current room
-- Rather than checking map[i] for tiletypes, create dict that maps integers
-  to colors (later modify to map integers to png paths)
+- Create isometric rendering mode for combat that draws only the current room scaled up to the viewport
 """
+tile_types = {
+    -1: (36, 31, 49),
+    0 : (125, 120, 130),
+    1 : (94, 92, 100),
+    2 : (125, 88, 55),
+    3 : (0, 102, 255)
+}
 
-def renderTilemap(dungeon, p, viewport_w, viewport_h, tile_size, surface):
+background = 
+
+def renderTilemap(dungeon, p, rc, viewport_w, viewport_h, tile_size, surface):
+    # Condense this into 1 function to calculate viewport pos
     width = dungeon.map_width
     map = dungeon.tiles
     px = p[0]
@@ -29,14 +37,7 @@ def renderTilemap(dungeon, p, viewport_w, viewport_h, tile_size, surface):
             i = row * width + col
             x = (col * tile_size) - (vp_start_col * tile_size)
             y = (row * tile_size) - (vp_start_row * tile_size)
-            if map[i] == 0:
-                color = (125, 120, 130)
-            elif map[i] == 1:
-                color = (94, 92, 100)
-            elif map[i] == 2:
-                color = (125, 88, 55)
-            else:
-                color = (36, 31, 49)
+            color = tile_types[map[i]]
             pygame.draw.rect(surface, color, pygame.Rect(x + x_offset, y + y_offset, tile_size, tile_size))
-    pygame.draw.rect(surface, (255, 0, 0), pygame.Rect(px + x_offset, py + y_offset, tile_size, tile_size))
+    pygame.draw.rect(surface, (0, 20, 255), pygame.Rect(px + x_offset, py + y_offset, tile_size, tile_size))
     return vp_start_row * width + vp_start_col
