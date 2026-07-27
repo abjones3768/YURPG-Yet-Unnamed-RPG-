@@ -12,9 +12,7 @@ tile_types = {
     3 : (0, 102, 255)
 }
 
-background = 
-
-def renderTilemap(dungeon, p, rc, viewport_w, viewport_h, tile_size, surface):
+def renderTilemap(dungeon, p, viewport_w, viewport_h, tile_size, surface):
     # Condense this into 1 function to calculate viewport pos
     width = dungeon.map_width
     map = dungeon.tiles
