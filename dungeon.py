@@ -1,16 +1,13 @@
 import random
+import tile_types
 
 """
 TODO:
-- Finish room templates and apply them after drawing rooms/corridors initially
+- Finish and test portal room template
 - Implement random RUBBLE tile segments in each room that represent
   segments of tiles that are elevated above the ground for combat
 - Create new tile types (chest, enemy, portal, etc)
 - Function to generate enemies and items
-
-IDEA:
-- Randomly place keys in different chests around the map
-- Collect all x keys to unlock the teleporter that takes you to the boss
 """
 
 # room_templates
@@ -18,7 +15,7 @@ EMPTY = 0              #- empty room                                           -
 CENTER_WALL_H = 1      #- wall along center in horizontal room                 - only sm and med horizontal rooms
 CENTER_WALL_V = 2      #- wall along center in vertical room                   - only sm and med vertical rooms
 FOUR_PILLARS = 3       #- four pillars, one in each corner of the room         - only sm and med square rooms                                     - only med and lg square rooms
-# PORTAL = 4           #- portal room                                          - portal room is randomly-selected during dungeon generation
+PORTAL = 4             #- portal room                                          - portal room is randomly-selected during dungeon generation
 CISTERN = 5            #- large rectangular pool of water in center            - any med room
 RUINS = 6              #- room is subdivided into subrooms connected by doors  - any med or lg room
 
@@ -76,24 +73,18 @@ class Room:
             self.right = Room(self.x1, midpoint, self.x2, self.y2)
             return True
 
-    # Randomly place segments of rubble tiles in each room that, when rendered in
-    # isometric mode for combat, elevate those tiles to varying degrees
     def get_room_template(self, w, h):
         room_size = w*h
         ratio  = w / h
         options = []
 
-        if room_size < 800:
+        if room_size < 640:
             options.append(EMPTY)
+        elif room_size < 1600:
+            options.append(CISTERN)
+            options.append(FOUR_PILLARS)
         else:
             options.append(RUINS)
-        if room_size >= 1600:
-            #options.append(LIBRARY)
-            #options.append(ARMORY)
-            #options.append(CATACOMBS)
-            if 800 < room_size <= 2400:
-                options.append(CISTERN)
-                options.append(FOUR_PILLARS)
         if ratio < 0.7:
             if room_size < 1600:
                 options.append(CENTER_WALL_V)
@@ -103,21 +94,21 @@ class Room:
         return options[random.randint(0, len(options) - 1)]
 
     def empty_template(this_room, xpos, ypos):
-        return 0
+        return tile_types.FLOOR
 
     def vertical_wall_template(this_room, xpos, ypos):
         vertical_mid = (this_room.x1 + this_room.x2) // 2
         y_offset = this_room.height // 6
         if xpos == vertical_mid and this_room.y1 + y_offset <= ypos < this_room.y2 - y_offset:
-            return 1
-        return 0
+            return tile_types.WALL
+        return tile_types.FLOOR
 
     def horizontal_wall_template(this_room, xpos, ypos):
         horizontal_mid = (this_room.y1 + this_room.y2) // 2
         x_offset = this_room.width // 6
         if ypos == horizontal_mid and this_room.x1 + x_offset <= xpos < this_room.x2 - x_offset:
-            return 1
-        return 0
+            return tile_types.WALL
+        return tile_types.FLOOR
 
     def pillars_template(this_room, xpos, ypos):
         pillar_size = min(this_room.width, this_room.height) // 6
@@ -125,21 +116,34 @@ class Room:
             (this_room.x2 - pillar_size > xpos >= this_room.x2 - pillar_size*2 and this_room.y1 + pillar_size <= ypos < this_room.y1 + pillar_size*2) or
             (this_room.x2 - pillar_size > xpos >= this_room.x2 - pillar_size*2 and this_room.y2 - pillar_size > ypos >= this_room.y2 - pillar_size*2) or
             (this_room.x1 + pillar_size <= xpos < this_room.x1 + pillar_size*2 and this_room.y2 - pillar_size > ypos >= this_room.y2 - pillar_size*2)):
-            return 1
-        return 0
+            return tile_types.WALL
+        return tile_types.FLOOR
 
     def cistern_template(this_room, xpos, ypos):
         cist_gap = min(this_room.width, this_room.height) // 4
         if (xpos >= this_room.x1 + cist_gap and xpos < this_room.x2 - cist_gap and 
            ypos >= this_room.y1 + cist_gap and ypos < this_room.y2 - cist_gap):
-           return 3
-        return 0
+           return tile_types.WATER
+        return tile_types.FLOOR
 
     def ruins_template(this_room, xpos, ypos):
-        return 0
+        return tile_types.FLOOR
 
+    # Draw square portal cover in center of room with a smaller square
+    # in each of its corners.
+    # In each smaller square, draw a black circle.
+    # Find the 4 dungeon keys to turn on the portal.
+    # When the portal has been activated, render vortex on the large square.
     def portal_template(this_room, xpos, ypos):
-        return 0
+        horizontal_gap = this_room.width // 3
+        vertical_gap = this_room.height // 3
+        px1 = this_room.x1 + horizontal_gap
+        py1 = this_room.y1 + vertical_gap
+        px2 = this_room.x2 - horizontal_gap
+        py2 = this_room.y2 - vertical_gap
+        if xpos < px1 and ypos < py1 and xpos >= px2 and ypos >= py2:
+            return tile_types.PLATFORM
+        return tile_types.FLOOR
 
     # Maps room types to their corresponding template functions
     template_map = {
@@ -147,7 +151,7 @@ class Room:
         CENTER_WALL_H : horizontal_wall_template,   # done
         CENTER_WALL_V : vertical_wall_template,     # done
         FOUR_PILLARS: pillars_template,             # done
-        # PORTAL: portal_template,
+        PORTAL: portal_template,
         CISTERN: cistern_template,                  # done
         RUINS: ruins_template                       # done
     }
@@ -165,6 +169,7 @@ class Dungeon:
         self.tiles = [-1] * (map_width * map_height)
         self.player_tile = None
         self.parent = None
+        self.portal_room = None
 
     def shrinkRooms(self):
         self.root.shrink(self.min_cell_size)
@@ -187,44 +192,53 @@ class Dungeon:
                 min_x2 = min(room.x2, neighbor.x2)
                 max_x1 = max(room.x1, neighbor.x1)
                 cx = int(max_x1 + min_x2) // 2
-                if self.parent.tiles[(neighbor.y1+1) * self.parent.map_width + cx] == 0 and self.parent.tiles[(room.y2-2) * self.parent.map_width + cx] == 0:
+                if self.parent.tiles[(neighbor.y1+1) * self.parent.map_width + cx] == tile_types.FLOOR and self.parent.tiles[(room.y2-2) * self.parent.map_width + cx] == tile_types.FLOOR:
                     for x in range(cx-3, cx+2):
-                        self.parent.tiles[neighbor.y1 * self.parent.map_width + x] = 0
-                        self.parent.tiles[(room.y2-1) * self.parent.map_width + x] = 0
+                        self.parent.tiles[neighbor.y1 * self.parent.map_width + x] = tile_types.FLOOR
+                        self.parent.tiles[(room.y2-1) * self.parent.map_width + x] = tile_types.FLOOR
             for neighbor in room.h_neighbors:
                 min_y2 = min(room.y2, neighbor.y2)
                 max_y1 = max(room.y1, neighbor.y1)
                 cy = int(max_y1 + min_y2) // 2
-                if self.parent.tiles[cy * self.parent.map_width + neighbor.x1+1] == 0 and self.parent.tiles[cy * self.parent.map_width + room.x2-2] == 0:
+                if self.parent.tiles[cy * self.parent.map_width + neighbor.x1+1] == tile_types.FLOOR and self.parent.tiles[cy * self.parent.map_width + room.x2-2] == tile_types.FLOOR:
                     for y in range(cy-2, cy+2):
-                        self.parent.tiles[y * self.parent.map_width + neighbor.x1] = 0
-                        self.parent.tiles[y * self.parent.map_width + room.x2-1] = 0
+                        self.parent.tiles[y * self.parent.map_width + neighbor.x1] = tile_types.FLOOR
+                        self.parent.tiles[y * self.parent.map_width + room.x2-1] = tile_types.FLOOR
 
     def createHCorridor(self, x1, x2, cy):
         for y in range(cy-3, cy+2):
-            for x in range(x1-2, x2+2):
+            for x in range(x1-1, x2+1):
                 if y == cy-3 or y == cy+1:
-                    if x == x1-2 or x == x2+1:
-                        self.tiles[y * self.map_width+ x] = 0
-                    else:
-                        self.tiles[y * self.map_width + x] = 1
+                    self.tiles[y * self.map_width + x] = tile_types.WALL
                 elif x == x1-1 or x == x2:
-                    self.tiles[y * self.map_width + x] = 2
+                    self.tiles[y * self.map_width + x] = tile_types.DOOR
                 else:
-                    self.tiles[y * self.map_width + x] = 0
+                    self.tiles[y * self.map_width + x] = tile_types.FLOOR
 
     def createVCorridor(self, y1, y2, cx):
         for x in range(cx-3, cx+2):
-            for y in range(y1-2, y2+2):
+            for y in range(y1-1, y2+1):
                 if x == cx-3 or x == cx+1:
-                    if y == y1-2 or y == y2+1:
-                        self.tiles[y * self.map_width + x] = 0
-                    else:
-                        self.tiles[y * self.map_width + x] = 1
+                    self.tiles[y * self.map_width + x] = tile_types.WALL
                 elif y == y1-1 or y == y2:
-                    self.tiles[y * self.map_width + x] = 2
+                    self.tiles[y * self.map_width + x] = tile_types.DOOR
                 else:
-                    self.tiles[y * self.map_width + x] = 0
+                    self.tiles[y * self.map_width + x] = tile_types.FLOOR
+
+    def open_door(self, index):
+        left = index-1
+        right = index+1
+        up = index-self.map_width
+        down = index+self.map_width
+        self.tiles[index] = tile_types.FLOOR
+        if self.tiles[left] == tile_types.DOOR:
+            self.open_door(left)
+        if self.tiles[right] == tile_types.DOOR:
+            self.open_door(right)
+        if self.tiles[up] == tile_types.DOOR:
+            self.open_door(up)
+        if self.tiles[down] == tile_types.DOOR:
+            self.open_door(down)
 
     def generateDungeon(self):
         cur_room_count = 1
@@ -233,6 +247,7 @@ class Dungeon:
                 cur_room_count += 1
         self.findNeighbors()
         self.shrinkRooms()
+        self.portal_room = self.rooms.index(random.choice([room for room in self.rooms if (room.width * room.height) >= 1600]))
         self.set_room_tiles(True)
         self.subdivide_subdungeons()
         self.set_corridor_tiles()
@@ -259,7 +274,7 @@ class Dungeon:
     def placePlayer(self):
         start_room = self.rooms[random.randint(1, self.total_rooms-1)]
         self.player_tile = start_room.x1
-        while self.tiles[self.player_tile] != 0:
+        while self.tiles[self.player_tile] != tile_types.FLOOR:
             start_col = random.randint(start_room.x1 + 2, start_room.x2 - 2)
             start_row = random.randint(start_room.y1 + 2, start_room.y2 - 2)
             self.player_tile = start_row * self.map_width + start_col
@@ -267,22 +282,24 @@ class Dungeon:
     def set_room_tiles(self, is_world_map):
         dungeon = self
         for i, room in enumerate(self.rooms):
-            room.template = room.get_room_template(room.width, room.height)
+            if i == self.portal_room:
+                room.template = PORTAL
+            else:
+                room.template = room.get_room_template(room.width, room.height)
             if is_world_map:
                 if room.template == RUINS:
                     self.sub_dungeons.append(i)
             else:
                 dungeon = self.parent
-
             for y in range(room.y1, room.y2):
                 for x in range(room.x1, room.x2):
                     if x == room.x1 or x == room.x2-1 or y == room.y1 or y == room.y2-1:
-                        tile_type = 1
+                        tile_type = tile_types.WALL
                     else:
                         if is_world_map:
                             tile_type = Room.template_map[room.template](room, x, y)
                         else:
-                            tile_type = 0
+                            tile_type = tile_types.FLOOR
                     dungeon.tiles[y * dungeon.map_width + x] = tile_type
 
     def set_corridor_tiles(self):
