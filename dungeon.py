@@ -166,7 +166,7 @@ class Dungeon:
         self.min_cell_size = cell_size
         self.rooms = []
         self.sub_dungeons = []
-        self.tiles = [-1] * (map_width * map_height)
+        self.tiles = [tile_types.SHADOW] * (map_width * map_height)
         self.player_tile = None
         self.parent = None
         self.portal_room = None
