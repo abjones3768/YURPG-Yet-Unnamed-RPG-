@@ -6,8 +6,6 @@ from combatActors import *
 from combatDefines import *
 """
 TODO:
-- Bounds checking lol
-- Multiple players and enemies (might just work?)
 - Movement code for enemies (all of them will use the same pathfinding, just travel directly towards
 nearest party member within movement range)
 - Implement movement range checking in general
@@ -40,16 +38,25 @@ def createBattle(actors, x, y): # Returns a 2d list of either characters '-' or 
 def testEnvironment():
     weaponInit()
     armorInit()
-    # members = int(input("How many party members? "))
-    player1 = characterInit()
+    members = int(input("How many party members? (1-4)"))
+    partyList = []
+    while members > 4 or members < 1:
+        members = int(input("How many party members? (1-4)"))
+    for i in range(members):
+        partyList.append(characterInit())
     enemy = Goblin()
+    enemy2 = Goblin()
     actors = []
-    actors.append(player1)
+    for member in partyList:
+        actors.append(member)
     actors.append(enemy)
+    actors.append(enemy2)
     battleGrid = createBattle(actors, 8, 8)
     battleLoop(battleGrid)
 
 def battleLoop(grid):
+    xMax = len(grid) - 1
+    yMax = len(grid[0]) - 1
     printGrid(grid)
     input("Battle Start! Press Enter to continue.")
     actorDict = {}
@@ -83,7 +90,7 @@ def battleLoop(grid):
                 action = 0
                 while action < 1 or action > 5:
                     printGrid(grid)
-                    action = int(input("Choose an option.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
+                    action = int(input(f"Choose an option for {actor.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
                 if action == MOVE:
                     x = 0
                     y = 0
@@ -92,7 +99,7 @@ def battleLoop(grid):
                     y = int(input())
                     y -= 1
                     x -= 1
-                    while not grid[y][x] == '-':
+                    while x > xMax or y > yMax or x < 0 or y < 0 or not grid[y][x] == '-':
                         print("Invalid move.")
                         x = int(input())
                         y = int(input())
@@ -120,13 +127,14 @@ def battleLoop(grid):
                     if attack == 'D': y += 1
                     if attack == 'L': x -= 1
                     if attack == 'R': x += 1
-                    if not grid[y][x] == '-':
+                    if x <= xMax and y <= yMax and x >= 0 and y >= 0 and not grid[y][x] == '-':
                         damage = playerAttack(actor, grid[y][x])
                         print(f"{actor.name} dealt {damage} damage to {grid[y][x].name}!")
                         if grid[y][x].health < 1:
                             printGrid(grid)
                             print(f"{grid[y][x].name} defeated!")
                             actorDict.pop(grid[y][x])
+                            battleTimer.pop(grid[y][x])
                             grid[y][x] = '-' # we love garbage collection
                     else:
                         printGrid(grid)
@@ -159,6 +167,7 @@ def battleLoop(grid):
                     print(f"{target.name} defeated!")
                     grid[actorDict[target][0]][actorDict[target][1]] = '-' # we love garbage collection
                     actorDict.pop(target)
+                    battleTimer.pop(target)
             time.sleep(1)
         playerPresent = False
         enemyPresent = False

@@ -64,7 +64,7 @@ class Player(Actor):
                 self.strength = 10
                 self.defense = 10
                 self.magicDefense = 5
-                self.speed = 5
+                self.speed = 3 # default 5
                 self.magic = 1
 
                 self.weapon = "Sword"
@@ -80,7 +80,7 @@ class Player(Actor):
                 self.strength = 3
                 self.defense = 0
                 self.magicDefense = 10
-                self.speed = 3
+                self.speed = 2 # default 3
                 self.magic = 10
 
                 self.weapon = "Staff"
