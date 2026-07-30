@@ -14,9 +14,127 @@ TODO:
 - Expand content
 
 """
+
+actorDict = {} # actorDict is a dictionary of coordinates where the keys are the corresponding actor pointers
 battleTimer = {} # Dict of integers that uses actor pointers as an index to their current value
 
-def createBattle(actors, x, y): # Returns a 2d list of either characters '-' or pointers to actors
+def battleLoop(grid): # Steps through battle state when called
+    # Key for grid array:
+    # '_' = Blank spot
+    # '|' = Wall
+    # Anything else = Treated as actor pointer
+    weaponInit()
+    armorInit() # in final, these will probably be initialized once at runtime
+    itemInit() 
+
+    xMax = len(grid) - 1 # Get array dimensions
+    yMax = len(grid[0]) - 1
+
+    x = -1
+    y = -1
+    for cols in grid: # Builds a dictionary containing all actors and their location, 
+        y += 1        # and populates battleTimer dictionary,
+        x = -1        # by iterating through grid.
+        for actor in cols:
+            x += 1
+            if not actor == '_' and not actor =='|': # If current "actor" is a pointer to an actor
+                coordList = list()
+                coordList.append(y)
+                coordList.append(x)
+                actorDict[actor] = coordList
+                battleTimer[actor] = 0
+
+    # Usage for actorDict and battleTimer:
+    # actorDict[ACTORPOINTER][X] (If X is 0, returns y value, if 1, returns x value)
+    # battleTimer[ACTORPOINTER] (Returns or accesses battleTimer for specific actor)
+
+    turns = getTurns(battleTimer)
+    for actor in turns:
+        if isinstance(actor, Player): # If actor is a player
+            action = 0
+            # get player menu input
+            # move, attack, magic, items, wait
+            match action:
+                case _ if action == MOVE:
+                    # get player move coordinates (possibly use existing dungeon pathfinding to validate?)
+                    pass
+                case _ if action == ATTACK:
+                    # ask for direction and damage enemy
+                    pass
+                case _ if action == MAGIC:
+                    # open magic menu, select spell, damage enemy (magic range could be determined by movement range?)
+                    pass
+                case _ if action == ITEMS:
+                    # open magic menu, select item, use item (can be used on self or directly adjacent actor)
+                    pass
+                case _ if action == WAIT:
+                    # just do nothing
+                    pass
+                case _:
+                    # invalid move lol
+                    exit()
+        else: # if actor is enemy
+            playerList = [] # List of every player actor
+            for rows in grid:
+                for actors in rows:
+                    if isinstance(actors, Player):
+                        playerList.append(actors) # Populate list
+
+            coordList = [] # List of coordinates for player actors
+            for i in range(len(playerList)):
+                coordList.append(actorDict[playerList[i]]) # Populate list
+
+            distanceList = [] # Absolute distance to all player actors
+            for i in range(len(coordList)): 
+                distanceList.append(coordList[i][0] + coordList[i][1]) # Populate list
+            
+            closest = distanceList.index(min(distanceList)) # Find closest player actor
+            target = playerList[closest]
+
+            canAttack = False
+            # pathfinding and movement goes here :)
+            if canAttack: # Set this to true if an enemy pathfinds to a spot directly adjacent to a player actor.
+                canAttack = False
+                attack = random.choice(actor.attackList) # Grabs a random attack from list
+                damage = attack(actor, target)
+                # Attack functions damage defending actor, show damage number on screen somehow
+                if target.health < 1: # If target died
+                    # Show that actor has died on screen
+                    grid[actorDict[target][0]][actorDict[target][1]] = '-' # we love garbage collection
+                    actorDict.pop(target) # Remove from coordinate dictionary
+                    battleTimer.pop(target) # Remove from battle timer
+    playerPresent = False
+    enemyPresent = False
+    for actor in actorDict: # Iterate through actor dict
+        if isinstance(actor, Player): # If current actor is a player
+            playerPresent = True
+        else: # If actor is not a player, it must be an enemy
+            enemyPresent = True
+    if not playerPresent:
+        pass
+        # Lose condition, end game or something
+    if not enemyPresent:
+        pass
+        # Win condition, end encounter and return to dungeon view
+            
+
+
+def getTurns(battleTimer): # Takes in battle timer dict, iterates through full list and adds speed stats, returns
+    getsTurn = []          # list of actors that got a turn.
+    noTurn = True
+    while noTurn:
+        for actor in battleTimer: # Iterates through every actor in battleTimer and increments the timer
+            battleTimer[actor] += actor.speed # by speed stat
+            if battleTimer[actor] > 99: # When a timer exceeds 100, it gets reset to 0 and
+                battleTimer[actor] = 0 # the actor is added to a list of actors that get a turn
+                getsTurn.append(actor)
+                noTurn = False
+    random.shuffle(getsTurn) # If multiple actors got a turn in the last loop, randomize their order
+    return getsTurn
+
+# Remaining functions are text based display functions used for the testing environment
+
+def TESTcreateBattle(actors, x, y): # Returns a 2d list of either characters '-' or pointers to actors
     actorGrid = [['-' for _ in range(y)] for _ in range(x)]
     for actor in actors: # Iterates through list of actors and randomly assigns a location
         xloc = random.randint(0, x - 1)
@@ -26,8 +144,6 @@ def createBattle(actors, x, y): # Returns a 2d list of either characters '-' or 
             yloc = random.randint(0, y - 1)
         actorGrid[yloc][xloc] = actor
     return actorGrid
-
-# Remaining functions are text based display functions used for the testing environment
 
 def testEnvironment():
     weaponInit()
@@ -48,17 +164,18 @@ def testEnvironment():
     actors.append(enemy)
     actors.append(enemy2)
 
-    battleGrid = createBattle(actors, 8, 8)
-    battleLoop(battleGrid)
+    battleGrid = TESTcreateBattle(actors, 8, 8)
+    TESTbattleLoop(battleGrid)
 
-def battleLoop(grid):
+def TESTbattleLoop(grid):
     xMax = len(grid) - 1 # Get array dimensions
     yMax = len(grid[0]) - 1
-    printGrid(grid)
+    TESTprintGrid(grid)
     input("Battle Start! Press Enter to continue.")
     actorDict = {} # actorDict is a dictionary of coordinates where the keys are the corresponding actor pointers
     x = -1
     y = -1
+    battleTimer = {} # Dict of integers that uses actor pointers as an index to their current value
     for cols in grid: # Builds a dictionary containing all actors and their location, 
         y += 1        # and populates battleTimer dictionary
         x = -1
@@ -86,7 +203,7 @@ def battleLoop(grid):
             if isinstance(actor, Player): # If actor is a player
                 action = 0
                 while action < 1 or action > 5:
-                    printGrid(grid)
+                    TESTprintGrid(grid)
                     action = int(input(f"Choose an option for {actor.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
                 if action == MOVE:
                     x = 0
@@ -118,7 +235,7 @@ def battleLoop(grid):
                     # Moving does not use up a turn, so take input again.
                     action = 0
                     while action < 1 or action > 4:
-                        printGrid(grid)
+                        TESTprintGrid(grid)
                         action = int(input("Choose an option.\n1. Attack\n2. Magic\n3. Items\n4. Wait\n"))
                     action += 1 # Increment to sneakily reuse code
                 if action == ATTACK:
@@ -137,13 +254,13 @@ def battleLoop(grid):
                         damage = playerAttack(actor, grid[y][x])                        # grid bounds and target
                         print(f"{actor.name} dealt {damage} damage to {grid[y][x].name}!") # is an actor
                         if grid[y][x].health < 1:
-                            printGrid(grid)
+                            TESTprintGrid(grid)
                             print(f"{grid[y][x].name} defeated!")
                             actorDict.pop(grid[y][x])
                             battleTimer.pop(grid[y][x])
                             grid[y][x] = '-' # we love garbage collection
                     else:
-                        printGrid(grid)
+                        TESTprintGrid(grid)
                         print("Miss!")
 
                 if action == MAGIC:
@@ -161,7 +278,7 @@ def battleLoop(grid):
                     damage = actor.magicAttacks[choice - 1](actor, actor, manaChoice)
                     print(f"{actor.name} dealt {damage} damage to {actor.name}!")
                     if actor.health < 1:
-                        printGrid(grid)
+                        TESTprintGrid(grid)
                         print(f"{actor.name} defeated!")
                         actorDict.pop(actor)
                         battleTimer.pop(actor)
@@ -256,13 +373,13 @@ def battleLoop(grid):
                     damage = attack(actor, target)
                     print(f"{actor.name} dealt {damage} damage to {target.name}!")
                     if target.health < 1:
-                        printGrid(grid)
+                        TESTprintGrid(grid)
                         print(f"{target.name} defeated!")
                         grid[actorDict[target][0]][actorDict[target][1]] = '-' # we love garbage collection
                         actorDict.pop(target)
                         battleTimer.pop(target)
                 else:
-                    printGrid(grid)
+                    TESTprintGrid(grid)
             time.sleep(2)
         playerPresent = False
         enemyPresent = False
@@ -272,15 +389,15 @@ def battleLoop(grid):
             else: 
                 enemyPresent = True
         if not playerPresent:
-            printGrid(grid)
+            TESTprintGrid(grid)
             combatLoops = False
             print("You Lose!")
         if not enemyPresent:
-            printGrid(grid)
+            TESTprintGrid(grid)
             combatLoops = False
             print("You Win!")
 
-def printGrid(grid):
+def TESTprintGrid(grid):
     os.system("clear")
     for row in grid:
         for actor in row:
