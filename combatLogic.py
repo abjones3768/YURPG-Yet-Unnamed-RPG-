@@ -8,9 +8,7 @@ from constants import *
 
 """
 TODO:
-- Interface system (miiiiiiiight make everything a class???)
-    - Bare minimum requires modularization and redefinition of all text based code
-- Level system and stat growth
+- Level system and stat growth (jeremy)
 - Item rarity
 - Enemy rarity? (may just be the level)
 - Expand content
