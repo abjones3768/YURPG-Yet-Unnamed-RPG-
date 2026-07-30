@@ -51,27 +51,53 @@ def battleLoop(grid): # Steps through battle state when called
     for actor in turns:
         if isinstance(actor, Player): # If actor is a player
             action = 0
+            canMove = True
+            turnOver = False
+            hasAttacked = False
             # get player menu input
             # move, attack, magic, items, wait
-            match action:
-                case _ if action == MOVE:
-                    # get player move coordinates (possibly use existing dungeon pathfinding to validate?)
+            while not turnOver: # the spaghetti code here exists so you can move independent of whether or not the player
+                if hasAttacked and canMove: # has attacked yet, players can move before or after attack/magic etc
                     pass
-                case _ if action == ATTACK:
-                    # ask for direction and damage enemy
-                    pass
-                case _ if action == MAGIC:
-                    # open magic menu, select spell, damage enemy (magic range could be determined by movement range?)
-                    pass
-                case _ if action == ITEMS:
-                    # open magic menu, select item, use item (can be used on self or directly adjacent actor)
-                    pass
-                case _ if action == WAIT:
-                    # just do nothing
-                    pass
-                case _:
-                    # invalid move lol
-                    exit()
+                    # this is a little funky but the only available options here should be moving and waiting
+                if canMove == False:
+                    action += 1 # idea behind this is the menu should go from displaying something like
+                    # 1. Move
+                    # 2. Attack
+                    # 3. Magic
+                    # etc. to
+                    # 1. Attack
+                    # 2. Magic
+                    # 3. Items
+                    # this is so the switch statement can be reused but the choice is adjusted based on menu gui
+                    # this can be changed if needed but the logic is sound i think
+                match action:
+                    case _ if action == MOVE:
+                        canMove = False
+                        # get player move coordinates (possibly use existing dungeon pathfinding to validate?)
+                        pass
+                    case _ if action == ATTACK:
+                        hasAttacked = True
+                        # ask for direction and damage enemy
+                        pass
+                    case _ if action == MAGIC:
+                        hasAttacked = True
+                        # open magic menu, select spell, damage enemy (magic range could be determined by movement range?)
+                        pass
+                    case _ if action == ITEMS:
+                        hasAttacked = True
+                        # open magic menu, select item, use item (can be used on self or directly adjacent actor)
+                        pass
+                    case _ if action == WAIT:
+                        # just do nothing
+                        turnOver = True
+                    case _:
+                        # invalid move lol
+                        exit()
+                if not canMove and hasAttacked:
+                    turnOver = False
+                    
+
         else: # if actor is enemy
             playerList = [] # List of every player actor
             for rows in grid:
@@ -99,7 +125,7 @@ def battleLoop(grid): # Steps through battle state when called
                 # Attack functions damage defending actor, show damage number on screen somehow
                 if target.health < 1: # If target died
                     # Show that actor has died on screen
-                    grid[actorDict[target][0]][actorDict[target][1]] = '-' # we love garbage collection
+                    grid[actorDict[target][0]][actorDict[target][1]] = FLOOR # we love garbage collection
                     actorDict.pop(target) # Remove from coordinate dictionary
                     battleTimer.pop(target) # Remove from battle timer
     playerPresent = False
