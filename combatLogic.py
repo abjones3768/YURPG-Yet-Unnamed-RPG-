@@ -6,10 +6,6 @@ from combatActors import *
 from combatDefines import *
 """
 TODO:
-- Movement range checking for player actors
-- Items 
-- Magic
-- Basic stat displays (likely just health and timer values, or large stat dumps idk)
 - Interface system (miiiiiiiight make everything a class???)
     - Bare minimum requires modularization and redefinition of all text based code
 - Level system and stat growth
@@ -36,6 +32,7 @@ def createBattle(actors, x, y): # Returns a 2d list of either characters '-' or 
 def testEnvironment():
     weaponInit()
     armorInit()
+    itemInit()
 
     members = int(input("How many party members? (1-4)"))
     partyList = []
@@ -99,16 +96,25 @@ def battleLoop(grid):
                     y = int(input())
                     y -= 1
                     x -= 1
-                    while x > xMax or y > yMax or x < 0 or y < 0 or not grid[y][x] == '-':
-                        print("Invalid move.")
+                    yDist = abs(y - actorDict[actor][0])
+                    xDist = abs(x - actorDict[actor][1])
+                    totalDist = yDist + xDist
+
+                    while x > xMax or y > yMax or x < 0 or y < 0 or not grid[y][x] == '-' or totalDist > actor.movementRange: 
+                        print("Invalid move.") # While move out of bounds or moving into actor or moved too far
                         x = int(input())
                         y = int(input())
                         y -= 1
                         x -= 1
+                        yDist = abs(y - actorDict[actor][0])
+                        xDist = abs(x - actorDict[actor][1])
+                        totalDist = yDist + xDist
+
                     grid[y][x] = actor
                     grid[actorDict[actor][0]][actorDict[actor][1]] = '-'
                     actorDict[actor][1] = x
                     actorDict[actor][0] = y
+                    
                     # Moving does not use up a turn, so take input again.
                     action = 0
                     while action < 1 or action > 4:
@@ -139,10 +145,39 @@ def battleLoop(grid):
                     else:
                         printGrid(grid)
                         print("Miss!")
+
                 if action == MAGIC:
                     print("Magic: ")
+                    magicNum = len(actor.magicAttacks)
+                    for i in range(len(actor.magicAttacks)):
+                        print(f"{i + 1}. {actor.magicAttacks[i]}")
+                    choice = int(input("Choose a spell."))
+                    while choice > magicNum or choice < 1:
+                        choice = int(input("Choose a spell."))
+                    manaChoice = int(input(f"How much mana do you want to spend? Max: {actor.mana}"))
+                    while manaChoice > actor.mana or manaChoice < 1:
+                        manaChoice = int(input(f"How much mana do you want to spend? Max: {actor.mana}"))
+
+                    damage = actor.magicAttacks[choice - 1](actor, actor, manaChoice)
+                    print(f"{actor.name} dealt {damage} damage to {actor.name}!")
+                    if actor.health < 1:
+                        printGrid(grid)
+                        print(f"{actor.name} defeated!")
+                        actorDict.pop(actor)
+                        battleTimer.pop(actor)
+                        actor = '-' 
+
                 if action == ITEMS:
                     print("Items: ")
+                    itemNum = len(actor.inventory)
+                    for i in range(len(actor.inventory)):
+                        print(f"{i + 1}. {actor.inventory[i]}")
+                    choice = int(input("Choose an item."))
+                    while choice > itemNum or choice < 1:
+                        choice = int(input("Choose an item."))
+                    itemDict[actor.inventory[choice - 1]].usageFunction(actor)
+                    print(f"{actor.name} used {itemDict[actor.inventory[choice - 1]].name}. {itemDict[actor.inventory[choice - 1]].usageMessage}")
+
                 if action == WAIT:
                     pass
             else:
@@ -228,7 +263,7 @@ def battleLoop(grid):
                         battleTimer.pop(target)
                 else:
                     printGrid(grid)
-            time.sleep(1)
+            time.sleep(2)
         playerPresent = False
         enemyPresent = False
         for actor in actorDict:

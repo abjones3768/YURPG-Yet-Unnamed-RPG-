@@ -40,6 +40,8 @@ class Player(Actor):
     exp = int()
     totalExp = int() 
 
+    inventory = list() # List of item names as strings that refer to dict of item stats
+
     # Equipment variables are the names of the equipment.
     # Equipment names serve as keys for a dictionary containing structs that define behavior and stats.
     weapon = ""
@@ -86,6 +88,8 @@ class Player(Actor):
                 self.weapon = "Staff"
                 self.armor = "Shirt"
                 self.accessory = "Necklace"
+
+                self.magicAttacks.append(fireMagic)
             case _ if job == ROGUE:
                 self.movementRange = 3
                 self.maxHealth = 40

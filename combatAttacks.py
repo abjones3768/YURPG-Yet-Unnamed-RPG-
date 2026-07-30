@@ -37,3 +37,25 @@ def enemyAttack(attacker, defender):
     damage = damage * mul
     defender.health -= damage
     return int(damage)
+
+def fireMagic(attacker, defender, manaUsed):
+    damage = attacker.magic + weaponDict[attacker.weapon].magicAttack - defender.magicDefense + (manaUsed * 2)
+    
+    if defender.weakness == FIRE:
+        damage *= 2
+    if defender.resistant == FIRE:
+        damage /= 2
+    if defender.immune == FIRE:
+        return 0
+    if defender.absorb == FIRE:
+        damage = -damage
+    if damage < 0:
+        damage = 0
+
+    randy = random.randint(-50, 50)
+    mul = float(randy)/100
+    mul += 1
+    damage = damage * mul
+    defender.health -= damage
+    return int(damage)
+
