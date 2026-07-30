@@ -4,6 +4,8 @@ from combatItems import *
 from combatAttacks import *
 from combatActors import *
 from combatDefines import *
+from constants import *
+
 """
 TODO:
 - Interface system (miiiiiiiight make everything a class???)
@@ -14,22 +16,19 @@ TODO:
 - Expand content
 
 """
-
 actorDict = {} # actorDict is a dictionary of coordinates where the keys are the corresponding actor pointers
 battleTimer = {} # Dict of integers that uses actor pointers as an index to their current value
 
 def battleLoop(grid): # Steps through battle state when called
-    # Key for grid array:
-    # '_' = Blank spot
-    # '|' = Wall
-    # Anything else = Treated as actor pointer
+    # Values within grid are defined in constants.py, anything else is considered an actor pointer
+    gridTiles = [0, 1, 2, 3, 4, 5, 6, 7]
+
     weaponInit()
-    armorInit() # in final, these will probably be initialized once at runtime
+    armorInit() # in final, these should be initialized once at runtime
     itemInit() 
 
     xMax = len(grid) - 1 # Get array dimensions
     yMax = len(grid[0]) - 1
-
     x = -1
     y = -1
     for cols in grid: # Builds a dictionary containing all actors and their location, 
@@ -37,7 +36,7 @@ def battleLoop(grid): # Steps through battle state when called
         x = -1        # by iterating through grid.
         for actor in cols:
             x += 1
-            if not actor == '_' and not actor =='|': # If current "actor" is a pointer to an actor
+            if actor not in gridTiles: # If current "actor" is a pointer to an actor
                 coordList = list()
                 coordList.append(y)
                 coordList.append(x)
@@ -45,7 +44,7 @@ def battleLoop(grid): # Steps through battle state when called
                 battleTimer[actor] = 0
 
     # Usage for actorDict and battleTimer:
-    # actorDict[ACTORPOINTER][X] (If X is 0, returns y value, if 1, returns x value)
+    # actorDict[ACTORPOINTER][X] (If X is 0, returns y value, if 1, returns x value) (also accesses)
     # battleTimer[ACTORPOINTER] (Returns or accesses battleTimer for specific actor)
 
     turns = getTurns(battleTimer)
