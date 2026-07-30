@@ -1,7 +1,6 @@
-OCTANTS = 8
-import tile_types
+import constants
 
-# Class that implements Björn Bergström's recursive shadowcasting FOV algorithm
+# Class that implements recursive shadowcasting FOV algorithm and stores tile visibility data
 class Shadowcaster:
     def __init__(self, width, height):
         # Stores each tile's visibility status
@@ -9,17 +8,17 @@ class Shadowcaster:
         
         # Multiplication matrix used to compute x,y offsets in each octant
         # around the player
-        self.mult = [
-            [1,  0,  0, -1, -1,  0,  0,  1],
-            [0,  1, -1,  0,  0, -1,  1,  0],
-            [0,  1,  1,  0,  0, -1, -1,  0],
-            [1,  0,  0,  1, -1,  0,  0, -1]
-        ]
+        self.mult_matrix = (
+            (1,  0,  0, -1, -1,  0,  0,  1),
+            (0,  1, -1,  0,  0, -1,  1,  0),
+            (0,  1,  1,  0,  0, -1, -1,  0),
+            (1,  0,  0,  1, -1,  0,  0, -1)
+        )
 
     # Check if a tile is blocked (either a wall or door tile)
     def blocked(self, dungeon, x, y):
         i = y * dungeon.map_width + x
-        return dungeon.tiles[i] == tile_types.WALL or dungeon.tiles[i] == tile_types.DOOR
+        return dungeon.tiles[i] == constants.WALL or dungeon.tiles[i] == constants.DOOR
 
     # Recursive function that casts shadows behind blocked tiles by segmenting tiles
     # surrounding the player into octants and iterating each octant's tiles.
@@ -77,8 +76,9 @@ class Shadowcaster:
     
     # Run the recursive cast light function on each octant of tiles around the player
     def fov(self, x, y, radius, dungeon):
-        "Calculate lit squares from the given location and radius"
-        for oct in range(OCTANTS):
+        # Calculate lit squares from the given location and radius
+        self.tile_visibility[dungeon.player_tile] = 1
+        for oct in range(constants.OCTANTS):
             self.cast_light(x, y, 1, 1.0, 0.0, radius, dungeon,
-                            self.mult[0][oct], self.mult[1][oct],
-                            self.mult[2][oct], self.mult[3][oct])
+                            self.mult_matrix[0][oct], self.mult_matrix[1][oct],
+                            self.mult_matrix[2][oct], self.mult_matrix[3][oct])

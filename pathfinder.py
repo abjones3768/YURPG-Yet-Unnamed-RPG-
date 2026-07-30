@@ -1,4 +1,4 @@
-import tile_types
+import constants
 
 """
 Use A* algorithm to calculate shortest path between start and dest tiles.
@@ -41,7 +41,7 @@ def findPath(tilemap, dest):
         # been checked, or needs to have its g-score updated, to both the open set and
         # the node map
         for n in neighbors:
-            if tilemap.tiles[n] == tile_types.FLOOR or tilemap.tiles[n] == tile_types.DOOR:
+            if tilemap.tiles[n] == constants.FLOOR or tilemap.tiles[n] == constants.DOOR:
                 if 0 <= n < map_size and n not in closed_set:
                     g = node_map[cur][0] + 1
                     if n not in open_set or g < node_map[n][0]:
