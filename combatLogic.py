@@ -6,8 +6,6 @@ from combatActors import *
 from combatDefines import *
 """
 TODO:
-- Movement code for enemies (all of them will use the same pathfinding, just travel directly towards
-nearest party member within movement range)
 - Implement movement range checking in general
 - Items 
 - Magic
@@ -152,22 +150,82 @@ def battleLoop(grid):
                         if isinstance(actors, Player):
                             playerList.append(actors)
                 coordList = []
-                for i in range(len(playerList)):
+                for i in range(len(playerList)): # Get all coordinates of player actors
                     coordList.append(actorDict[playerList[i]])
                 distanceList = []
-                for i in range(len(coordList)):
+                for i in range(len(coordList)): # Get absolute distance to all player actors
                     distanceList.append(coordList[i][0] + coordList[i][1])
-                closest = distanceList.index(min(distanceList))
+                closest = distanceList.index(min(distanceList)) # Find closest player actor
                 target = playerList[closest]
-                attack = random.choice(actor.attackList) # Grabs a random attack from list
-                damage = attack(actor, target)
-                print(f"{actor.name} dealt {damage} damage to {target.name}!")
-                if target.health < 1:
+                canAttack = False
+                for i in range(actor.movementRange):
+                    if actorDict[target][0] == actorDict[actor][0]: # Same Y position as target
+                        if actorDict[target][1] > actorDict[actor][1]: # If actor X position is lower than target (target is to the right)
+                            if actorDict[actor][1] + 1 == actorDict[target][1] and actorDict[actor][0] == actorDict[target][0]:
+                                canAttack = True
+                                break
+                            elif grid[actorDict[actor][0]][actorDict[actor][1] + 1] == '-':
+                                grid[actorDict[actor][0]][actorDict[actor][1] + 1] = actor
+                                grid[actorDict[actor][0]][actorDict[actor][1]] = '-'
+                                actorDict[actor][1] += 1
+                                if actorDict[actor][1] + 1 == actorDict[target][1] and actorDict[actor][0] == actorDict[target][0]:
+                                    canAttack = True
+                                    break
+                                continue
+
+                        if actorDict[target][1] < actorDict[actor][1]: # Target is to left)
+                            if actorDict[actor][1] - 1 == actorDict[target][1] and actorDict[actor][0] == actorDict[target][0]:
+                                canAttack = True
+                                break
+                            elif grid[actorDict[actor][0]][actorDict[actor][1] - 1] == '-':
+                                grid[actorDict[actor][0]][actorDict[actor][1] - 1] = actor
+                                grid[actorDict[actor][0]][actorDict[actor][1]] = '-'
+                                actorDict[actor][1] -= 1
+                                if actorDict[actor][1] - 1 == actorDict[target][1] and actorDict[actor][0] == actorDict[target][0]:
+                                    canAttack = True
+                                    break
+                                continue
+
+                    if actorDict[target][0] < actorDict[actor][0]: # Target has a different Y position, check if target is above
+                        time.sleep(2)
+                        if actorDict[actor][0] - 1 == actorDict[target][0] and actorDict[actor][1] == actorDict[target][1]:
+                            canAttack = True
+                            break
+                        elif grid[actorDict[actor][0] - 1][actorDict[actor][1]] == '-':
+                            grid[actorDict[actor][0] - 1][actorDict[actor][1]] = actor
+                            grid[actorDict[actor][0]][actorDict[actor][1]] = '-'
+                            actorDict[actor][0] -= 1
+                            if actorDict[actor][0] - 1 == actorDict[target][0] and actorDict[actor][1] == actorDict[target][1]:
+                                canAttack = True
+                                break
+                            continue
+
+                    if actorDict[target][0] > actorDict[actor][0]: # check if target is down
+                        if actorDict[actor][0] + 1 == actorDict[target][0] and actorDict[actor][1] == actorDict[target][1]:
+                            canAttack = True
+                            break
+                        elif grid[actorDict[actor][0] + 1][actorDict[actor][1]] == '-':
+                            grid[actorDict[actor][0] + 1][actorDict[actor][1]] = actor
+                            grid[actorDict[actor][0]][actorDict[actor][1]] = '-'
+                            actorDict[actor][0] += 1
+                            if actorDict[actor][0] + 1 == actorDict[target][0] and actorDict[actor][1] == actorDict[target][1]:
+                                canAttack = True
+                                break
+                            continue
+                        
+                if canAttack:
+                    canAttack = False
+                    attack = random.choice(actor.attackList) # Grabs a random attack from list
+                    damage = attack(actor, target)
+                    print(f"{actor.name} dealt {damage} damage to {target.name}!")
+                    if target.health < 1:
+                        printGrid(grid)
+                        print(f"{target.name} defeated!")
+                        grid[actorDict[target][0]][actorDict[target][1]] = '-' # we love garbage collection
+                        actorDict.pop(target)
+                        battleTimer.pop(target)
+                else:
                     printGrid(grid)
-                    print(f"{target.name} defeated!")
-                    grid[actorDict[target][0]][actorDict[target][1]] = '-' # we love garbage collection
-                    actorDict.pop(target)
-                    battleTimer.pop(target)
             time.sleep(1)
         playerPresent = False
         enemyPresent = False
