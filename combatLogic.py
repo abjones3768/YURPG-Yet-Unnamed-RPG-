@@ -6,7 +6,7 @@ from combatActors import *
 from combatDefines import *
 """
 TODO:
-- Implement movement range checking in general
+- Movement range checking for player actors
 - Items 
 - Magic
 - Basic stat displays (likely just health and timer values, or large stat dumps idk)
@@ -36,6 +36,7 @@ def createBattle(actors, x, y): # Returns a 2d list of either characters '-' or 
 def testEnvironment():
     weaponInit()
     armorInit()
+
     members = int(input("How many party members? (1-4)"))
     partyList = []
     while members > 4 or members < 1:
@@ -49,23 +50,24 @@ def testEnvironment():
         actors.append(member)
     actors.append(enemy)
     actors.append(enemy2)
+
     battleGrid = createBattle(actors, 8, 8)
     battleLoop(battleGrid)
 
 def battleLoop(grid):
-    xMax = len(grid) - 1
+    xMax = len(grid) - 1 # Get array dimensions
     yMax = len(grid[0]) - 1
     printGrid(grid)
     input("Battle Start! Press Enter to continue.")
-    actorDict = {}
+    actorDict = {} # actorDict is a dictionary of coordinates where the keys are the corresponding actor pointers
     x = -1
     y = -1
     for cols in grid: # Builds a dictionary containing all actors and their location, 
-        y += 1        # and populates timer dictionary
+        y += 1        # and populates battleTimer dictionary
         x = -1
         for actor in cols:
             x += 1
-            if not actor == '-':
+            if not actor == '-': # If current "actor" is a pointer to an actor
                 coordList = list()
                 coordList.append(y)
                 coordList.append(x)
@@ -112,7 +114,7 @@ def battleLoop(grid):
                     while action < 1 or action > 4:
                         printGrid(grid)
                         action = int(input("Choose an option.\n1. Attack\n2. Magic\n3. Items\n4. Wait\n"))
-                    action += 1
+                    action += 1 # Increment to sneakily reuse code
                 if action == ATTACK:
                     attack = ""
                     while attack not in {'U', 'D', 'L', 'R'}:
@@ -125,9 +127,9 @@ def battleLoop(grid):
                     if attack == 'D': y += 1
                     if attack == 'L': x -= 1
                     if attack == 'R': x += 1
-                    if x <= xMax and y <= yMax and x >= 0 and y >= 0 and not grid[y][x] == '-':
-                        damage = playerAttack(actor, grid[y][x])
-                        print(f"{actor.name} dealt {damage} damage to {grid[y][x].name}!")
+                    if x <= xMax and y <= yMax and x >= 0 and y >= 0 and not grid[y][x] == '-': # If attack is within
+                        damage = playerAttack(actor, grid[y][x])                        # grid bounds and target
+                        print(f"{actor.name} dealt {damage} damage to {grid[y][x].name}!") # is an actor
                         if grid[y][x].health < 1:
                             printGrid(grid)
                             print(f"{grid[y][x].name} defeated!")
@@ -142,7 +144,7 @@ def battleLoop(grid):
                 if action == ITEMS:
                     print("Items: ")
                 if action == WAIT:
-                    print("")
+                    pass
             else:
                 playerList = []
                 for rows in grid: # Grab all player actors on field
@@ -158,7 +160,7 @@ def battleLoop(grid):
                 closest = distanceList.index(min(distanceList)) # Find closest player actor
                 target = playerList[closest]
                 canAttack = False
-                for i in range(actor.movementRange):
+                for i in range(actor.movementRange): # Evil pathfinding
                     if actorDict[target][0] == actorDict[actor][0]: # Same Y position as target
                         if actorDict[target][1] > actorDict[actor][1]: # If actor X position is lower than target (target is to the right)
                             if actorDict[actor][1] + 1 == actorDict[target][1] and actorDict[actor][0] == actorDict[target][0]:
