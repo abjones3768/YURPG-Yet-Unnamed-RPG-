@@ -55,6 +55,7 @@ class Player(Actor):
 
         self.level = 1 
         self.exp = 0 
+        
         items = {} # Dictionary which uses item name as reference, value is the amount held
 
         match job:
