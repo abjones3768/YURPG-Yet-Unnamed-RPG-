@@ -52,7 +52,7 @@ class Player(Actor):
 
     def __init__(self, name, job):
         self.name = name
-
+        self.job=job
         self.level = 1 
         self.exp = 0 
         
@@ -112,6 +112,46 @@ class Player(Actor):
             case _:
                 print("invalid job lol")
                 # this should be validated before the constructor is called
+    
+    def expNeeded(self):
+        return 100 + (self.level * 50) 
+        
+
+    def gainExp(self, enemyLevel):
+        expGained = enemyLevel * 20 
+        self.exp += expGained 
+
+    pint(self.name, "gained", expGained, "XP!") 
+
+    if self.exp >= self.expNeeded(): 
+        self.exp -= self.expNeeded() 
+        self.levelUp() 
+        
+
+    def levelUp(self):
+        self.level +=1 
+        if self.job == WARRIOR: 
+            self.maxHealth += 8 
+            self.strength += 3   
+            self.defense += 2   
+            self.speed += 1 
+    elif self.job == MAGE:
+        self.maxHealth += 3
+        self.maxMana += 5
+        self.magic += 3
+        self.magicDefense += 2
+        self.speed += 2
+
+    elif self.job == ROGUE:
+        self.maxHealth += 5
+        self.strength += 2
+        self.defense += 1
+        self.speed += 3
+
+    self.health = self.maxHealth
+    self.mana = self.maxMana
+
+    print(self.name, "reached Level", self.level)
 
 class Goblin(Actor): # Remaining class definitions are for enemy types
     name = "Goblin"
