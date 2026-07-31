@@ -278,7 +278,10 @@ def TESTbattleLoop(grid):
                         print(f"{actor.name} dealt {damage} damage to {grid[y][x].name}!") # is an actor
                         if grid[y][x].health < 1:
                             TESTprintGrid(grid)
-                            print(f"{grid[y][x].name} defeated!")
+                            print(f"{grid[y][x].name} defeated!") 
+                            
+                            actor.gainExp(grid[y][x].level)
+                            
                             actorDict.pop(grid[y][x])
                             battleTimer.pop(grid[y][x])
                             grid[y][x] = '-' # we love garbage collection
