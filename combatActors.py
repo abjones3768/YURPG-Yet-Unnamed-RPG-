@@ -114,44 +114,44 @@ class Player(Actor):
                 # this should be validated before the constructor is called
     
     def expNeeded(self):
-        return 100 + (self.level * 50) 
-        
+        return 100 + (self.level * 50)
 
     def gainExp(self, enemyLevel):
-        expGained = enemyLevel * 20 
-        self.exp += expGained 
+        expGained = enemyLevel * 20
+        self.exp += expGained
 
-    pint(self.name, "gained", expGained, "XP!") 
+        print(self.name, "gained", expGained, "XP!")
 
-    if self.exp >= self.expNeeded(): 
-        self.exp -= self.expNeeded() 
-        self.levelUp() 
-        
+        if self.exp >= self.expNeeded():
+            self.exp -= self.expNeeded()
+            self.levelUp()
 
     def levelUp(self):
-        self.level +=1 
-        if self.job == WARRIOR: 
-            self.maxHealth += 8 
-            self.strength += 3   
-            self.defense += 2   
-            self.speed += 1 
-    elif self.job == MAGE:
-        self.maxHealth += 3
-        self.maxMana += 5
-        self.magic += 3
-        self.magicDefense += 2
-        self.speed += 2
+        self.level += 1
 
-    elif self.job == ROGUE:
-        self.maxHealth += 5
-        self.strength += 2
-        self.defense += 1
-        self.speed += 3
+        if self.job == WARRIOR:
+            self.maxHealth += 8
+            self.strength += 3
+            self.defense += 2
+            self.speed += 1
 
-    self.health = self.maxHealth
-    self.mana = self.maxMana
+        elif self.job == MAGE:
+            self.maxHealth += 3
+            self.maxMana += 5
+            self.magic += 3
+            self.magicDefense += 2
+            self.speed += 2
 
-    print(self.name, "reached Level", self.level)
+        elif self.job == ROGUE:
+            self.maxHealth += 5
+            self.strength += 2
+            self.defense += 1
+            self.speed += 3
+
+        self.health = self.maxHealth
+        self.mana = self.maxMana
+
+        print(self.name, "reached Level", self.level)
 
 class Goblin(Actor): # Remaining class definitions are for enemy types
     name = "Goblin"
