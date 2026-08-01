@@ -1,5 +1,6 @@
 from combatDefines import *
 from combatAttacks import *
+import constants
 
 def characterInit(): # Creates a player object using entered name and job, returns pointer to object
     name = input("Enter character name:\n")
@@ -10,6 +11,11 @@ def characterInit(): # Creates a player object using entered name and job, retur
     return player
 
 class Actor: # Base actor class from which players and enemies inherit from
+    def __init__(self, x, y, tile_type):
+        self.x = x
+        self.y = y
+        self.tile_type = tile_type
+    
     name = ""
 
     movementRange = int()
@@ -50,7 +56,8 @@ class Player(Actor):
 
     magicAttacks = list() # List of pointers to spells
 
-    def __init__(self, name, job):
+    def __init__(self, x, y, name, job):
+        super().__init__(x, y, constants.PLAYER)
         self.name = name
         self.job=job
         self.level = 1 
@@ -168,5 +175,6 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
 
     attackList = list() # List of pointers to all abilites (spells and basic attack)
 
-    def __init__(self):
+    def __init__(self, x, y):
+        super().__init__(x, y, constants.ENEMY)
         self.attackList.append(enemyAttack)

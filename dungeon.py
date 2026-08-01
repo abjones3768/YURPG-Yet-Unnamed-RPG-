@@ -1,5 +1,6 @@
 import random
 import constants
+from combatActors import Player, Goblin
 
 # Dungeon room templates
 CENTER_WALL_H = 0
@@ -21,6 +22,8 @@ class Room:
         self.h_neighbors = []
         self.v_neighbors = []
         self.template = None
+        self.enemies = []
+        self.chests = []
 
     def shrink(self, min_size):
         if self.left == None:
@@ -136,7 +139,10 @@ class Dungeon:
         self.sub_dungeons = []
         self.tiles = [constants.SHADOW] * (map_width * map_height)
         self.player_tile = None
+        self.start_room = None
         self.parent = None
+        self.in_room = False
+        self.current_room = None
 
     def shrinkRooms(self):
         self.root.shrink(self.min_cell_size)
@@ -177,22 +183,24 @@ class Dungeon:
     def createHCorridor(self, x1, x2, cy):
         for y in range(cy-3, cy+2):
             for x in range(x1-1, x2+1):
+                index = y * self.map_width + x
                 if y == cy-3 or y == cy+1:
-                    self.tiles[y * self.map_width + x] = constants.WALL
+                    self.tiles[index] = constants.WALL
                 elif x == x1-1 or x == x2:
-                    self.tiles[y * self.map_width + x] = constants.DOOR
+                    self.tiles[index] = constants.DOOR
                 else:
-                    self.tiles[y * self.map_width + x] = constants.FLOOR
+                    self.tiles[index] = constants.FLOOR
 
     def createVCorridor(self, y1, y2, cx):
         for x in range(cx-3, cx+2):
             for y in range(y1-1, y2+1):
+                index = y * self.map_width + x
                 if x == cx-3 or x == cx+1:
-                    self.tiles[y * self.map_width + x] = constants.WALL
+                    self.tiles[index] = constants.WALL
                 elif y == y1-1 or y == y2:
-                    self.tiles[y * self.map_width + x] = constants.DOOR
+                    self.tiles[index] = constants.DOOR
                 else:
-                    self.tiles[y * self.map_width + x] = constants.FLOOR
+                    self.tiles[index] = constants.FLOOR
 
     def open_door(self, index):
         left = index-1
@@ -220,6 +228,7 @@ class Dungeon:
         self.subdivide_subdungeons()
         self.set_corridor_tiles()
         self.placePlayer()
+        self.spawn_enemies()
         return self.tiles
 
     def subdivide_room(self):
@@ -240,11 +249,13 @@ class Dungeon:
             sub_dungeon.subdivide_room()
 
     def placePlayer(self):
-        start_room = self.rooms[random.randint(1, self.total_rooms-1)]
-        self.player_tile = start_room.x1
+        self.start_room = self.rooms[random.randint(1, self.total_rooms-1)]
+        self.player_tile = self.start_room.x1
+        self.current_room = self.start_room
+        self.in_room = True
         while self.tiles[self.player_tile] != constants.FLOOR:
-            start_col = random.randint(start_room.x1 + 2, start_room.x2 - 2)
-            start_row = random.randint(start_room.y1 + 2, start_room.y2 - 2)
+            start_col = random.randint(self.start_room.x1 + 2, self.start_room.x2 - 2)
+            start_row = random.randint(self.start_room.y1 + 2, self.start_room.y2 - 2)
             self.player_tile = start_row * self.map_width + start_col
 
     def set_room_tiles(self, is_world_map):
@@ -282,10 +293,41 @@ class Dungeon:
                     cx = int(max_x1 + min_x2) // 2
                     self.createVCorridor(room.y2, neighbor.y1, cx)
 
-    # Calculate what room the player is in
     def get_current_room(self):
         for room in self.rooms:
             player_x = self.player_tile % self.map_width
             player_y = self.player_tile // self.map_width
-            if room.x1 < player_x < room.x2 and room.y1 < player_y < room.y2:
+            if room.x1 <= player_x < room.x2 and room.y1 <= player_y < room.y2:
                 return room
+
+    # Spawn distribution of enemies in each room based on size.
+    def spawn_enemies(self):
+        for room in self.rooms:
+            if room != self.start_room:
+                # Calculate number of enemies in each room
+                size = room.width * room.height
+                room_level = 0
+                enemy_count = 0
+                if size < 1600:
+                    room_level = 1
+                elif size < 3200:
+                    room_level = 2
+                elif size < 6400:
+                    room_level = 3
+                else:
+                    room_level = 4
+                enemy_chance = room_level/4
+                if random.random() < enemy_chance:
+                    enemy_count = random.randint(1, 2) * room_level
+
+                # Place any enemies in random floor tiles
+                placed_enemies = 0
+                while placed_enemies < enemy_count:
+                    place_tile = constants.SHADOW
+                    while self.tiles[place_tile] != constants.FLOOR:
+                        place_col = random.randint(room.x1 + 2, room.x2 - 2)
+                        place_row = random.randint(room.y1 + 2, room.y2 - 2)
+                        place_tile = place_row * self.map_width + place_col
+                    room.enemies.append(Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE))
+                    self.tiles[place_tile] = constants.ENEMY
+                    placed_enemies += 1

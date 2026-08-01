@@ -6,7 +6,7 @@ Outputs a dictionary called 'node-map' that contains all tiles that were travers
 Each value in the dict has a parent that allows the path to be traversed.
 """
 
-def findPath(tilemap, dest):
+def findPath(tilemap, dest, state, grid):
     start = tilemap.player_tile     # player tile
     width = tilemap.map_width       # dungeon width in tiles
     open_set = {start}              # stores tiles that have not yet been checked
@@ -40,9 +40,14 @@ def findPath(tilemap, dest):
         # Check each valid neighbor of the current tile and add each one that hasn't
         # been checked, or needs to have its g-score updated, to both the open set and
         # the node map
+        # If in combat, check each n to see if it is in battle_grid bounds before parsing
         for n in neighbors:
-            if tilemap.tiles[n] == constants.FLOOR or tilemap.tiles[n] == constants.DOOR:
-                if 0 <= n < map_size and n not in closed_set:
+            is_valid = True
+            cur_tile = tilemap.tiles[n]
+            if cur_tile == constants.FLOOR or cur_tile == constants.DOOR:
+                if state == constants.COMBAT_STATE and not (grid.x1 <= n%width <= grid.x2 and grid.y1 <= n//width <= grid.y2):
+                    is_valid = False
+                if 0 <= n < map_size and n not in closed_set and is_valid:
                     g = node_map[cur][0] + 1
                     if n not in open_set or g < node_map[n][0]:
                         open_set.add(n)

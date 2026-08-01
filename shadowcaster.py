@@ -21,11 +21,8 @@ class Shadowcaster:
         return dungeon.tiles[i] == constants.WALL or dungeon.tiles[i] == constants.DOOR
 
     # Recursive function that casts shadows behind blocked tiles by segmenting tiles
-    # surrounding the player into octants and iterating each octant's tiles.
-    # When blocked tiles are encountered, the function uses the slopes between
-    # the player's position and each tile's corners to tell which tiles to illuminate.
-    # All tiles that lie behind blocked tiles, out of the player's field of view
-    # remain shaded.
+    # surrounding the player into octants and casting rays from the player to the
+    # tiles in each octant to identify obstacles
     def cast_light(self, cx, cy, row, start, end, radius, dungeon, xx, xy, yx, yy):
             if start < end:
                 return

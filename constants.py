@@ -40,7 +40,7 @@ tile_colors = {
     CHEST : (255, 204, 0),
     PLAYER : (0, 0, 255),
     ENEMY : (255, 0, 0),
-    SHADOW : (0, 0, 0)
+    SHADOW : (0, 0, 0),
 }
 
 # Matrices used for isometric mode rendering and click handling
