@@ -4,6 +4,7 @@ import pathfinder
 import constants
 from dungeon import Dungeon
 from renderer import Renderer
+from battle_grid import BattleGrid
 from shadowcaster import Shadowcaster
 from combatActors import *
 
@@ -14,8 +15,7 @@ TODO:
 - Make hovering over battle grid tile color it with partially transparent red cube
 - Make hovering over battle grid obstacles call recursive function that makes all tiles
   in the obstacle partially transparent (same if an actor is blocked by one)
-- Use Actor objects for player/enemies.
-- Make function to spawn actors, chests and loot in chests by level/rarity,
+- Make function to spawn chests and loot in chests by level/rarity,
   including keys
 - Implement portal room with 4 keyhole tiles that, when unlocked,
   activate a portal in center of room that renders vortex animation
@@ -33,24 +33,16 @@ TODO:
 #################################################
 # CONTROLS (temporary until menus are added in) #
 #################################################
-#
-# M to toggle between top down and isometric
-# Click on floor/door tiles to move to them
-# Q to quit
+#                                               #
+# M to toggle between top down and isometric    #
+# Click on floor/door tiles to move to them     #
+# Q to quit                                     #
+#################################################
+
 
 # Move this to actor class
 # Accepts clicked tile as input and outputs path to it
 # import dungeon and renderer in combatActors
-def move(dest, dungeon, state, ren):
-    path_map = pathfinder.findPath(dungeon, dest, state, ren.get_battle_grid())
-    move_path = None
-    if path_map:
-        cur = dest
-        move_path = [cur]
-        while cur != dungeon.player_tile:
-            cur = path_map[cur][3]
-            move_path.insert(0, cur)
-    return move_path
 
 # Load sprites used for isometric rendering and scale them up to 32x32
 # Use sprite.image for drawing and sprite.rect for collision detection in isometric mode
@@ -84,37 +76,38 @@ pygame.mixer.init()
 game_state = constants.EXPLORATION_STATE
 prev_game_state = None
 info = pygame.display.Info()
-screen_width = info.current_w
-screen_height = info.current_h
-screen = pygame.display.set_mode((screen_width, screen_height))
-viewport_cols = screen_width // constants.TILE_SIZE
-viewport_rows = screen_height // constants.TILE_SIZE
-dungeon_cols = viewport_cols * 10
-dungeon_rows = viewport_rows * 10
+screen_width = info.current_w                                           # get user screen width
+screen_height = info.current_h                                          # get user screen height
+screen = pygame.display.set_mode((screen_width, screen_height))         # main graphics surface
+viewport_cols = screen_width // constants.TILE_SIZE                     # screen width in tile space
+viewport_rows = screen_height // constants.TILE_SIZE                    # screen height in tile space
+dungeon_cols = viewport_cols * 10                                       # dungeon width in tile space
+dungeon_rows = viewport_rows * 10                                       # dungeon height in tile space
 clock = pygame.time.Clock()
 images = load_images()
 sounds = load_audio()
 rend_mode = constants.TOP_DOWN
-combat_check_timer = 0
-game_time = 0
-move_start_time = 0
-move_elapsed_time = 0
-move_path_nodes = None
-move_path = None
-move_step_count = 0
-move_dest = None
-has_moved = False
-speed = 4
-start_combat = False
-illegal_move = False
-changed_rooms = False
+combat_check_timer = 0                                                  # Keeps time between enemy detection checks
+game_time = 0                                                           # Global game time
+move_start_time = 0                                                     # Stores time when movement is started
+move_elapsed_time = 0                                                   # Tracks time between movements along path
+move_path_nodes = None                                                  # Used for pathfinding to build path
+move_path = None                                                        # List of tiles along path from A to B
+move_step_count = 0                                                     # Used to track movement along path
+move_dest = None                                                        # Stores clicked tile to move to
+has_moved = False                                                       # Signals renderer to redraw isometric battle grid after movement
+speed = 4                                                               # Movement px per frame
+start_combat = False                                                    # Signals renderer to construct new isometric grid for combat
+illegal_move = False                                                    # Signals out-of-bounds move during combat
+changed_rooms = False                                                   # Signals that player has changed rooms in the dungeon
+mvmt_actor = None
 
 # Generate dungeon - change this once menus are done
 dungeon = Dungeon(constants.TILE_SIZE, 1, 1, dungeon_cols, dungeon_rows, 64, 20)
 dungeon.generateDungeon()
 
 # Player (change to instance of actor class)
-player = Player(dungeon.player_tile%dungeon_cols*constants.TILE_SIZE, dungeon.player_tile//dungeon_cols*constants.TILE_SIZE, "TEST", "Mage")
+player = Player(dungeon.player_tile%dungeon_cols*constants.TILE_SIZE, dungeon.player_tile//dungeon_cols*constants.TILE_SIZE, dungeon.player_tile, "TEST", 2)
 
 # FOV
 shadowcaster = Shadowcaster(dungeon_cols, dungeon_rows)
@@ -122,6 +115,9 @@ shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 3
 
 # Draws tile graphics in either top down or isometric mode each frame
 renderer = Renderer(viewport_cols, viewport_rows)
+
+# Resizable tile grid used for combat
+battle_grid = BattleGrid(viewport_cols*constants.TILE_SIZE, viewport_rows*constants.TILE_SIZE)
 
 # Game loop
 run = True
@@ -132,7 +128,7 @@ while run:
     screen.fill((0, 0, 0))
 
     # x,y offsets used for smooth movement of player/camera between tiles
-    vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen)
+    vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, battle_grid)
     
     # Tells renderer to run shadowcaster if player moves in top down mode,
     # or to update the battle grid after actor movement if in combat
@@ -165,10 +161,11 @@ while run:
                 dest_col = (int(e.pos[0] - offsets[0]) // constants.TILE_SIZE) + vp_pos[0]
                 dest_row = (int(e.pos[1] - offsets[1]) // constants.TILE_SIZE) + vp_pos[1]
                 move_dest = dest_row * dungeon_cols + dest_col
-                cur_tile = dungeon.tiles[move_dest]
-                if cur_tile == constants.FLOOR or cur_tile == constants.DOOR:
-                    move_path = move(dest_row * dungeon_cols + dest_col, dungeon, game_state, renderer)
+                dest_tile_val = dungeon.tiles[move_dest]
+                if dest_tile_val == constants.FLOOR or dest_tile_val == constants.DOOR:
+                    move_path = player.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
                     if move_path:
+                        mvmt_actor = player
                         move_step_count = 0
                         game_state = constants.MOVING_STATE
                         prev_game_state = constants.EXPLORATION_STATE
@@ -190,7 +187,9 @@ while run:
                 for enemy in dungeon.current_room.enemies:
                     x_dist = abs(player.x - enemy.x)
                     y_dist = abs(player.y - enemy.y)
-                    if x_dist <= 32*constants.TILE_SIZE and y_dist <= 16*constants.TILE_SIZE:
+                    if x_dist <= constants.TILE_SIZE*2*constants.TILE_SIZE and y_dist <= constants.TILE_SIZE//2*constants.TILE_SIZE:
+                        battle_grid.actors.clear()
+                        battle_grid.actors.extend(dungeon.current_room.enemies)
                         rend_mode = constants.ISOMETRIC
                         start_combat = True
                         game_state = constants.COMBAT_STATE
@@ -203,51 +202,59 @@ while run:
     # MOVE PLAYER ALONG PATH TO DESTINATION TILE AT INCREMENT OF 'SPEED'
     # PER FRAME UNTIL EITHER DESTINATION IS REACHED OR PATH IS CUT SHORT
     # DUE TO ILLEGAL MOVE.
-    # NEED TO MODIFY TO DO A CHECK TO SEE IF len(move_path) IS GREATER
-    # THAN THE AMOUNT OF MOVEMENT AN ACTOR HAS BASED ON SPEED STAT.
+
+    # NEED TO MODIFY TO DO A CHECK TO SEE IF len(move_path) IS LESS
+    # THAN THE ACTOR'S MOVEMENT RANGE.
+
     # ALSO NEED TO MODIFY SO THAT IF CLICKED TILE IS A CHEST, IT STOPS
     # PLAYER AT TILE BEFORE IT AND OPENS THE CHEST.
     elif game_state == constants.MOVING_STATE:
         illegal_move = False
         if move_step_count < len(move_path):
+            mvmt_actor.prev_tile = mvmt_actor.cur_tile
             next_tile = move_path[move_step_count]
             dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
             dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
             if pygame.time.get_ticks() - move_start_time > 10:
-                if dx > player.x:
-                    player.x += speed
-                elif dx < player.x:
-                    player.x -= speed
-                elif dy > player.y:
-                    player.y += speed
-                elif dy < player.y:
-                    player.y -= speed
-                if player.x == dx and player.y == dy:
-                    if dungeon.tiles[next_tile] == constants.DOOR:
-                        if rend_mode == constants.TOP_DOWN:
-                            sounds[constants.OPEN_DOOR].play()
-                            dungeon.open_door(next_tile)
-                            dungeon.in_room = not dungeon.in_room
-                            changed_rooms = True
-                        else:
-                            illegal_move = True
-                            game_state = prev_game_state
-                            prev_game_state = constants.MOVING_STATE
-                    if not illegal_move:
-                        dungeon.player_tile = next_tile
-                        has_moved = True
+                is_destination = False
+                if dx > mvmt_actor.x:
+                    mvmt_actor.x += speed
+                elif dx < mvmt_actor.x:
+                    mvmt_actor.x -= speed
+                elif dy > mvmt_actor.y:
+                    mvmt_actor.y += speed
+                elif dy < mvmt_actor.y:
+                    mvmt_actor.y -= speed
+                if mvmt_actor.x == dx and mvmt_actor.y == dy:
+                    mvmt_actor.cur_tile = next_tile
+                    if mvmt_actor is player:
+                        if dungeon.tiles[next_tile] == constants.DOOR:
+                            if rend_mode == constants.TOP_DOWN:
+                                sounds[constants.OPEN_DOOR].play()
+                                dungeon.open_door(next_tile)
+                                dungeon.in_room = not dungeon.in_room
+                                changed_rooms = True
+                            else:
+                                illegal_move = True
+                                game_state = prev_game_state
+                                prev_game_state = constants.MOVING_STATE
+                        if not illegal_move:
+                            has_moved = True
+                            move_step_count += 1
+                    else:
                         move_step_count += 1
                 move_start_time = pygame.time.get_ticks()
         else:
             game_state = prev_game_state
             prev_game_state = constants.MOVING_STATE
-            shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon)
-            if changed_rooms:
-                changed_rooms = False
-                if dungeon.in_room:
-                    dungeon.current_room = dungeon.get_current_room()
-                else:
-                    dungeon.current_room = None
+            if mvmt_actor is player:
+                shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon)
+                if changed_rooms:
+                    changed_rooms = False
+                    if dungeon.in_room:
+                        dungeon.current_room = dungeon.get_current_room(player)
+                    else:
+                        dungeon.current_room = None
 
 
     ########################################################
@@ -286,21 +293,60 @@ while run:
             # CLICK ON A TILE TO MOVE TO
             if e.type == pygame.MOUSEBUTTONDOWN:
                 click_pos = (int(e.pos[0]), int(e.pos[1]))
-                dest_row, dest_col = renderer.get_iso_tile(click_pos, dungeon)
+                dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)
                 move_dest = dest_row * dungeon_cols + dest_col
                 has_moved = True
-                cur_room = dungeon.get_current_room()
+                print(f"Clicked tile: [{dest_row}][{dest_col}]")
+                print(f"Player tile: [{player.cur_tile//dungeon_cols}][{player.cur_tile%dungeon_cols}]")
+                print("\nENEMY TILES:")
+                for enemy in battle_grid.actors:
+                    print(f"[{enemy.cur_tile//dungeon_cols}][{enemy.cur_tile%dungeon_cols}]")
                 if dungeon.tiles[move_dest] == constants.FLOOR:
-                    move_path = move(dest_row * dungeon_cols + dest_col, dungeon, game_state, renderer)
-                    if move_path:
+                    move_path = player.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
+                    if move_path and player.movementRange >= len(move_path)-1:
+                        mvmt_actor = player
                         move_step_count = 0
                         game_state = constants.MOVING_STATE
                         prev_game_state = constants.COMBAT_STATE
                         move_start_time = pygame.time.get_ticks()
         
-        ####################################
-        # COMBAT LOGIC FOR EACH FRAME HERE #
-        ####################################
+        ##############################################
+        # PUT COMBAT LOGIC FOR EACH FRAME BELOW HERE #
+        ##############################################
+        #
+        # battle_grid is a subset of tiles out of the greater dungeon.
+        # Each time combat is started, it updates its actor list to
+        # store all enemies currently in combat so they are easily accessible.
+        #
+        # MOVEMENT:
+        #
+        # Player movement is handled above in MOVEMENT state when a valid floor tile is clicked.
+        #
+        # For enemy's to follow the path to their target after calling their move function,
+        # here is what we need to do:
+        #
+        #       - Since they are going to move towards the player until within attack range,
+        #         call their move function with the player's tile as the destination.
+        #         To access the current player tile:  dungeon.player_tile
+        #
+        #       - When an enemy chooses to move on their turn, call their move function:
+        #               move_path = move(dungeon.player_tile, dungeon, game_state, battle_grid) and then
+        #         
+        #       - Then do this, same as for the player to initiate MOVEMENT state and start the timer:
+        #            if move_path:
+        #                mvmt_actor = actor
+        #                move_step_count = 0
+        #                game_state = constants.MOVING_STATE
+        #                prev_game_state = constants.COMBAT_STATE
+        #                move_start_time = pygame.time.get_ticks()
+        #               
+        #       - There is 1 thing we need to add:
+        #               -  I still need to implement a check for the player that doesn't let you click
+        #                   on a tile with an enemy in it in isometric
+        #
+        #               - I know how to do it, but I have a bug where only enemy
+        #                 isometric positions seem to be off by 1 from the clicked tile,
+        #                 in combat, so I will fix that.
 
 
     ########################################################

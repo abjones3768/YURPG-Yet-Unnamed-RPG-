@@ -293,10 +293,10 @@ class Dungeon:
                     cx = int(max_x1 + min_x2) // 2
                     self.createVCorridor(room.y2, neighbor.y1, cx)
 
-    def get_current_room(self):
+    def get_current_room(self, player):
         for room in self.rooms:
-            player_x = self.player_tile % self.map_width
-            player_y = self.player_tile // self.map_width
+            player_x = player.x // constants.TILE_SIZE
+            player_y = player.y // constants.TILE_SIZE
             if room.x1 <= player_x < room.x2 and room.y1 <= player_y < room.y2:
                 return room
 
@@ -328,6 +328,7 @@ class Dungeon:
                         place_col = random.randint(room.x1 + 2, room.x2 - 2)
                         place_row = random.randint(room.y1 + 2, room.y2 - 2)
                         place_tile = place_row * self.map_width + place_col
-                    room.enemies.append(Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE))
+                    enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                    room.enemies.append(enemy)
                     self.tiles[place_tile] = constants.ENEMY
                     placed_enemies += 1

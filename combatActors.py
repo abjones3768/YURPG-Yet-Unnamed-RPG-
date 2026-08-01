@@ -1,5 +1,6 @@
 from combatDefines import *
 from combatAttacks import *
+import pathfinder
 import constants
 
 def characterInit(): # Creates a player object using entered name and job, returns pointer to object
@@ -11,10 +12,28 @@ def characterInit(): # Creates a player object using entered name and job, retur
     return player
 
 class Actor: # Base actor class from which players and enemies inherit from
-    def __init__(self, x, y, tile_type):
+    def __init__(self, x, y, cur_tile, tile_type):
         self.x = x
         self.y = y
+        self.cur_tile = cur_tile
+        self.prev_tile = 0
         self.tile_type = tile_type
+
+    def update_tile_index(self, dungeon_width):
+        self.cur_tile = self.y//constants.TILE_SIZE * dungeon_width + self.x//constants.TILE_SIZE
+
+    # Destination is the target tile index in the 1D tilemap of the dungeon
+    # Other args are for pathfinder functionality
+    def move(self, destination, dungeon, state, grid):
+        path_map = pathfinder.findPath(self, dungeon, destination, state, grid)
+        move_path = None
+        if path_map:
+            cur = destination
+            move_path = [cur]
+            while cur != self.cur_tile:
+                cur = path_map[cur][3]
+                move_path.insert(0, cur)
+        return move_path
     
     name = ""
 
@@ -56,8 +75,8 @@ class Player(Actor):
 
     magicAttacks = list() # List of pointers to spells
 
-    def __init__(self, x, y, name, job):
-        super().__init__(x, y, constants.PLAYER)
+    def __init__(self, x, y, cur_tile, name, job):
+        super().__init__(x, y, cur_tile, constants.PLAYER)
         self.name = name
         self.job=job
         self.level = 1 
@@ -175,6 +194,6 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
 
     attackList = list() # List of pointers to all abilites (spells and basic attack)
 
-    def __init__(self, x, y):
-        super().__init__(x, y, constants.ENEMY)
+    def __init__(self, x, y, cur_tile):
+        super().__init__(x, y, cur_tile, constants.ENEMY)
         self.attackList.append(enemyAttack)

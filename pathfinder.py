@@ -6,8 +6,8 @@ Outputs a dictionary called 'node-map' that contains all tiles that were travers
 Each value in the dict has a parent that allows the path to be traversed.
 """
 
-def findPath(tilemap, dest, state, grid):
-    start = tilemap.player_tile     # player tile
+def findPath(actor, tilemap, dest, state, grid):
+    start = actor.cur_tile          # player tile
     width = tilemap.map_width       # dungeon width in tiles
     open_set = {start}              # stores tiles that have not yet been checked
     closed_set = set()              # stores tiles that have already been checked
