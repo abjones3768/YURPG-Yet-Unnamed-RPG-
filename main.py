@@ -318,6 +318,12 @@ while run:
         # Each time combat is started, it updates its actor list to
         # store all enemies currently in combat so they are easily accessible.
         #
+        #       - access combat actors:   battle_grid.actors
+        #
+        # I also updated the Actor base class so that for any actor you can easily
+        # get their position, tile_type and tile index in the dungeon.
+        #
+        #
         # MOVEMENT:
         #
         # Player movement is handled above in MOVEMENT state when a valid floor tile is clicked.
@@ -339,14 +345,14 @@ while run:
         #                game_state = constants.MOVING_STATE
         #                prev_game_state = constants.COMBAT_STATE
         #                move_start_time = pygame.time.get_ticks()
+        #
+        #       - This will initiate MOVING_STATE and the enemy will just move however many
+        #         tiles their movementRange allows on the quickest path to the player.
         #               
         #       - There are 2 things we need to add:
-        #               1.  Once character creation is complete, change the commented condition above
-        #                   in MOVING state to check after each movement to the next tile in the path
-        #                   whether or not the actor has reached their max movement range or not.
         #
-        #                   If they do, then the movement will be cut short and game_state will return to
-        #                   COMBAT state, where you can proceed with your turn logic.
+        #               1.  Currenly there is no visual cue for if you try to move to a tile
+        #                   outside your mvmt range, but I'll add that.
         #
         #               2.  I still need to implement a check for the player that doesn't let you click
         #                   on a tile with 
