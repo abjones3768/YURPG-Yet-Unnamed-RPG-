@@ -210,7 +210,7 @@ while run:
     # PLAYER AT TILE BEFORE IT AND OPENS THE CHEST.
     elif game_state == constants.MOVING_STATE:
         illegal_move = False
-        if move_step_count < len(move_path):
+        if move_step_count < len(move_path) and (mvmt_actor is player or move_step_count <= mvmt_actor.movementRange):
             mvmt_actor.prev_tile = mvmt_actor.cur_tile
             next_tile = move_path[move_step_count]
             dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
@@ -340,13 +340,16 @@ while run:
         #                prev_game_state = constants.COMBAT_STATE
         #                move_start_time = pygame.time.get_ticks()
         #               
-        #       - There is 1 thing we need to add:
-        #               -  I still need to implement a check for the player that doesn't let you click
-        #                   on a tile with an enemy in it in isometric
+        #       - There are 2 things we need to add:
+        #               1.  Once character creation is complete, change the commented condition above
+        #                   in MOVING state to check after each movement to the next tile in the path
+        #                   whether or not the actor has reached their max movement range or not.
         #
-        #               - I know how to do it, but I have a bug where only enemy
-        #                 isometric positions seem to be off by 1 from the clicked tile,
-        #                 in combat, so I will fix that.
+        #                   If they do, then the movement will be cut short and game_state will return to
+        #                   COMBAT state, where you can proceed with your turn logic.
+        #
+        #               2.  I still need to implement a check for the player that doesn't let you click
+        #                   on a tile with 
 
 
     ########################################################
