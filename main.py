@@ -201,16 +201,17 @@ while run:
         ##############################################################
             if len(aggro_enemies) > 0:
                 battle_grid.enemies.extend(aggro_enemies)
+                enemies_ready = 0
                 if not enemies_aggroed:
                     enemies_aggroed = True  # set this to false after combat triggered
                     enemy_move_start = pygame.time.get_ticks()
                 else:
-                    if pygame.time.get_ticks() - enemy_move_start > 200:
+                    if pygame.time.get_ticks() - enemy_move_start > 10:
                         for enemy in aggro_enemies:
                             next_tile = enemy.path_to_player[enemy.move_step]
                             x_dist = abs(player.x - enemy.x)
                             y_dist = abs(player.y - enemy.y)
-                            if enemy.move_step < len(enemy.path_to_player) - 5:
+                            if enemy.move_step < len(enemy.path_to_player) - 8:
                                 next_tile = enemy.path_to_player[enemy.move_step]
                                 dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
                                 dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
@@ -229,11 +230,14 @@ while run:
                                     dungeon.tiles[enemy.cur_tile] = constants.ENEMY
                                     enemy.move_step += 1
                             else:
-                                rend_mode = constants.ISOMETRIC
-                                start_combat = True
-                                game_state = constants.COMBAT_STATE
-                                prev_game_state = constants.EXPLORATION_STATE
-                                break
+                                enemies_ready += 1
+                                if enemies_ready == len(aggro_enemies):
+                                    rend_mode = constants.ISOMETRIC
+                                    start_combat = True
+                                    game_state = constants.COMBAT_STATE
+                                    prev_game_state = constants.EXPLORATION_STATE
+                                    break
+
 
             # TOP-DOWN CONTROLS
             for e in pygame.event.get():
