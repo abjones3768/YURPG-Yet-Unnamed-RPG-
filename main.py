@@ -8,6 +8,7 @@ from renderer import Renderer
 from battle_grid import BattleGrid
 from shadowcaster import Shadowcaster
 from combatActors import *
+from combatLogic import *
 
 # This script launches the game.
 
@@ -124,6 +125,10 @@ renderer = None
 battle_grid = None
 aggro_enemies = []
 enemies_aggroed = False
+
+# Combat init
+battleTimer = {} # Dict of integers that uses actor pointers as an index to their current value
+
 
 # Game loop
 run = True
@@ -400,7 +405,19 @@ while run:
             ##############################################
             # PUT COMBAT LOGIC FOR EACH FRAME BELOW HERE #
             ##############################################
-            #
+            
+            # allActors = list()
+            # allActors.append(player)
+            # for actor in battle_grid.enemies:
+            #    allActors.append(actor)
+            #turns = battleGetTurns(allActors, battleTimer) # gets list of actors that got a turn        
+            #for actor in turns:  # (this def shouldnt run every frame)
+            #    if isinstance(actor, Player): # player turn
+            #        mvmt_actor = actor
+            #    else: # enemy turn
+            #        mvmt_actor = actor
+
+
             # battle_grid is a subset of tiles out of the greater dungeon.
             # Each time combat is started, it updates its actor list to
             # store all enemies currently in combat so they are easily accessible.

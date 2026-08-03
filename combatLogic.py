@@ -14,38 +14,25 @@ TODO:
 - Expand content
 
 """
-actorDict = {} # actorDict is a dictionary of coordinates where the keys are the corresponding actor pointers
-battleTimer = {} # Dict of integers that uses actor pointers as an index to their current value
 
-def battleLoop(grid): # Steps through battle state when called
-    # Values within grid are defined in constants.py, anything else is considered an actor pointer
-    gridTiles = [0, 1, 2, 3, 4, 5, 6, 7]
+def battleGetTurns(actors, battleTimer): # Steps through battle state when called
+    if not battleTimer:
+        for actor in actors: 
+            battleTimer[actor] = 0
 
-    weaponInit()
-    armorInit() # in final, these should be initialized once at runtime
-    itemInit() 
+    getsTurn = [] # list of actors that got a turn.
+    noTurn = True
+    while noTurn:
+        for actor in battleTimer: # Iterates through every actor in battleTimer and increments the timer
+            battleTimer[actor] += actor.speed # by speed stat
+            if battleTimer[actor] > 99: # When a timer exceeds 100, it gets reset to 0 and
+                battleTimer[actor] = 0 # the actor is added to a list of actors that get a turn
+                getsTurn.append(actor)
+                noTurn = False
+    random.shuffle(getsTurn) # If multiple actors got a turn in the last loop, randomize their order
+    return getsTurn
 
-    xMax = len(grid) - 1 # Get array dimensions
-    yMax = len(grid[0]) - 1
-    x = -1
-    y = -1
-    for cols in grid: # Builds a dictionary containing all actors and their location, 
-        y += 1        # and populates battleTimer dictionary,
-        x = -1        # by iterating through grid.
-        for actor in cols:
-            x += 1
-            if actor not in gridTiles: # If current "actor" is a pointer to an actor
-                coordList = list()
-                coordList.append(y)
-                coordList.append(x)
-                actorDict[actor] = coordList
-                battleTimer[actor] = 0
-
-    # Usage for actorDict and battleTimer:
-    # actorDict[ACTORPOINTER][X] (If X is 0, returns y value, if 1, returns x value) (also accesses)
-    # battleTimer[ACTORPOINTER] (Returns or accesses battleTimer for specific actor)
-
-    turns = getTurns(battleTimer)
+def tuyrncode():
     for actor in turns:
         if isinstance(actor, Player): # If actor is a player
             action = 0
@@ -140,20 +127,6 @@ def battleLoop(grid): # Steps through battle state when called
         pass
         # Win condition, end encounter and return to dungeon view
             
-
-
-def getTurns(battleTimer): # Takes in battle timer dict, iterates through full list and adds speed stats, returns
-    getsTurn = []          # list of actors that got a turn.
-    noTurn = True
-    while noTurn:
-        for actor in battleTimer: # Iterates through every actor in battleTimer and increments the timer
-            battleTimer[actor] += actor.speed # by speed stat
-            if battleTimer[actor] > 99: # When a timer exceeds 100, it gets reset to 0 and
-                battleTimer[actor] = 0 # the actor is added to a list of actors that get a turn
-                getsTurn.append(actor)
-                noTurn = False
-    random.shuffle(getsTurn) # If multiple actors got a turn in the last loop, randomize their order
-    return getsTurn
 
 # Remaining functions are text based display functions used for the testing environment
 
