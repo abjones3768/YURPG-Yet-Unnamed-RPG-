@@ -67,7 +67,7 @@ class Renderer:
     # Make separate mode functions
     # In isometric, viewport/cam data should not be updated
     # Fix movement
-    def renderTilemap(self, screen_w, screen_h, mode, images, dungeon, p, sc, is_combat, moved_status, viewport_w, viewport_h, tile_size, surface, battle_grid):
+    def renderTilemap(self, screen_w, screen_h, mode, images, dungeon, p, sc, is_combat, moved_status, viewport_w, viewport_h, tile_size, surface, state, aggro_enemies, battle_grid):
         tilemap = dungeon.tiles
 
         # TOP DOWN MODE
@@ -85,7 +85,7 @@ class Renderer:
 
             # Only run shadowcaster if player has moved
             if moved_status:
-                sc.fov(p.x//tile_size, p.y//tile_size, 48, dungeon)
+                sc.fov(p.x//tile_size, p.y//tile_size, 48, dungeon, p, state, battle_grid, aggro_enemies)
 
             # Convert each tile from world space to viewport space and draw to screen
             for row in range(self.vp_pos[1], vp_end_row):
@@ -94,10 +94,15 @@ class Renderer:
                     x = (col * tile_size) - (self.vp_pos[0] * tile_size)
                     y = (row * tile_size) - (self.vp_pos[1] * tile_size)
                     if sc.tile_visibility[i]:
-                        color = constants.tile_colors[tilemap[i]]
+                        if dungeon.tiles[i] != constants.ENEMY:
+                            color = constants.tile_colors[tilemap[i]]
                     else:
                         color = constants.tile_colors[constants.SHADOW]
                     pygame.draw.rect(surface, color, pygame.Rect(x + self.x_offset, y + self.y_offset, tile_size, tile_size))
+            for enemy in aggro_enemies:
+                en_x = enemy.x - (self.vp_pos[0] * tile_size)
+                en_y = enemy.y - (self.vp_pos[1] * tile_size)
+                pygame.draw.rect(surface, constants.tile_colors[constants.ENEMY], pygame.Rect(en_x + self.x_offset, en_y + self.y_offset, tile_size, tile_size))
             pygame.draw.rect(surface, constants.tile_colors[constants.PLAYER], pygame.Rect(px + self.x_offset, py + self.y_offset, tile_size, tile_size))
     
         # ISOMETRIC MODE
@@ -136,8 +141,8 @@ class Renderer:
                                 for j in range(0, 3):
                                     pos[1] -= tile_size
                                     battle_grid.foreground.blit(images[tilemap[i]], pos)
-                            elif tilemap[i] == constants.ENEMY:
-                                battle_grid.foreground.blit(images[tilemap[i]], pos)
+                for enemy in battle_grid.enemies:
+                    battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_pos(room, enemy.y//constants.TILE_SIZE, enemy.x//constants.TILE_SIZE))
                 battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
@@ -160,8 +165,8 @@ class Renderer:
                                     pos[1] -= tile_size
                                     battle_grid.foreground.blit(images[tilemap[i]], pos)
                             pos[1] += tile_size
-                            if tilemap[i] == constants.ENEMY:
-                                battle_grid.foreground.blit(images[tilemap[i]], pos)
+                for enemy in battle_grid.enemies:
+                    battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_pos(room, enemy.y//constants.TILE_SIZE, enemy.x//constants.TILE_SIZE))
                 battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))

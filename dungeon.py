@@ -21,9 +21,8 @@ class Room:
         self.right = None
         self.h_neighbors = []
         self.v_neighbors = []
+        self.chests = {}
         self.template = None
-        self.enemies = []
-        self.chests = []
 
     def shrink(self, min_size):
         if self.left == None:
@@ -129,6 +128,9 @@ class Room:
 
 class Dungeon:
     def __init__(self, cell_size, start_x, start_y, map_width, map_height, total_rooms, min_room_size):
+        self.new_dungeon(cell_size, start_x, start_y, map_width, map_height, total_rooms, min_room_size)
+
+    def new_dungeon(self, cell_size, start_x, start_y, map_width, map_height, total_rooms, min_room_size):
         self.root = Room(start_x, start_y, start_x + map_width, start_y + map_height)
         self.cell_size = cell_size
         self.map_width = map_width
@@ -136,6 +138,7 @@ class Dungeon:
         self.total_rooms = total_rooms
         self.min_cell_size = min_room_size
         self.rooms = []
+        self.enemies = {}
         self.sub_dungeons = []
         self.tiles = [constants.SHADOW] * (map_width * map_height)
         self.player_tile = None
@@ -228,7 +231,7 @@ class Dungeon:
         self.subdivide_subdungeons()
         self.set_corridor_tiles()
         self.placePlayer()
-        self.spawn_enemies()
+        self.fill_rooms()
         return self.tiles
 
     def subdivide_room(self):
@@ -301,13 +304,14 @@ class Dungeon:
                 return room
 
     # Spawn distribution of enemies in each room based on size.
-    def spawn_enemies(self):
+    def fill_rooms(self):
         for room in self.rooms:
             if room != self.start_room:
                 # Calculate number of enemies in each room
                 size = room.width * room.height
                 room_level = 0
                 enemy_count = 0
+                chest_count = 0
                 if size < 1600:
                     room_level = 1
                 elif size < 3200:
@@ -317,8 +321,10 @@ class Dungeon:
                 else:
                     room_level = 4
                 enemy_chance = room_level/4
-                if random.random() < enemy_chance:
+                chest_chance = room_level/8
+                if random.random() <= enemy_chance:
                     enemy_count = random.randint(1, 2) * room_level
+                    chest_count = random.randint(1, room_level)
 
                 # Place any enemies in random floor tiles
                 placed_enemies = 0
@@ -329,6 +335,18 @@ class Dungeon:
                         place_row = random.randint(room.y1 + 2, room.y2 - 2)
                         place_tile = place_row * self.map_width + place_col
                     enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                    room.enemies.append(enemy)
+                    print(f"Enemy created at index [{place_tile%self.map_width}][{place_tile//self.map_width}]")
+                    self.enemies[place_tile] = enemy
                     self.tiles[place_tile] = constants.ENEMY
                     placed_enemies += 1
+
+                placed_chests = 0
+                while placed_chests < chest_count:
+                    place_tile = constants.SHADOW
+                    while self.tiles[place_tile] != constants.FLOOR:
+                        place_col = random.randint(room.x1 + 2, room.x2 - 2)
+                        place_row = random.randint(room.y1 + 2, room.y2 - 2)
+                        place_tile = place_row * self.map_width + place_col
+                    room.chests[place_tile] = []
+                    self.tiles[place_tile] = constants.CHEST
+                    placed_chests += 1

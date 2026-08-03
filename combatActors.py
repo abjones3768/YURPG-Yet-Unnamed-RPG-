@@ -19,9 +19,6 @@ class Actor: # Base actor class from which players and enemies inherit from
         self.prev_tile = 0
         self.tile_type = tile_type
 
-    def update_tile_index(self, dungeon_width):
-        self.cur_tile = self.y//constants.TILE_SIZE * dungeon_width + self.x//constants.TILE_SIZE
-
     # Destination is the target tile index in the 1D tilemap of the dungeon
     # Other args are for pathfinder functionality
     def move(self, destination, dungeon, state, grid):
@@ -197,3 +194,5 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
     def __init__(self, x, y, cur_tile):
         super().__init__(x, y, cur_tile, constants.ENEMY)
         self.attackList.append(enemyAttack)
+        self.path_to_player = []
+        self.move_step = 0

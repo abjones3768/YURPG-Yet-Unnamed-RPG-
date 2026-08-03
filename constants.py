@@ -3,10 +3,20 @@ FLOOR = 0
 WALL = 1
 DOOR = 2
 WATER = 3
-PLAYER = 4
-ENEMY = 5
-CHEST = 6
+CHEST = 4
+PLAYER = 5
+ENEMY = 6
 SHADOW = 7
+
+# Menu state values
+MAIN_MENU = 0
+IN_GAME = 1
+INVENTORY = 2
+SKILL_MENU = 3
+COMBAT_MENU = 4
+OPTIONS_MENU = 5
+CREDITS = 6
+NEW_GAME = 7
 
 # tile size
 TILE_SIZE = 16
@@ -16,6 +26,7 @@ EXPLORATION_STATE = 0
 COMBAT_STATE = 1
 MENU_STATE = 2
 MOVING_STATE = 3
+RESETTING = 4
 
 # Rendering modes
 TOP_DOWN = 4
@@ -30,6 +41,14 @@ LEVEL_UP = 1
 MELEE_ATTACK = 2
 OPEN_DOOR = 3
 VICTORY = 4
+BUTTON_CLICK = 5
+ILLEGAL_MOVE = 6
+ITEM_FOUND = 7
+MAGIC = 8
+NEW_GAME = 9
+
+# Music track ids
+MENU_THEME = 0
 
 # Tile color map
 tile_colors = {

@@ -10,5 +10,5 @@ class BattleGrid:
         self.x2 = 0
         self.y1 = 0
         self.y2 = 0
-        self.actors = []
+        self.enemies = []
         self.obstacle_groups = [] # will be used to group wall / door tiles together for transparency
