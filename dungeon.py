@@ -358,7 +358,7 @@ class Dungeon:
         job = random.randint(0, 2)
         weap_chance = random.random()
         armor_chance = random.random()
-        if weap_chance > 0.25:
+        if weap_chance > 0.4:
             if job == 0:
                 enemy.inventory.append(weaponDict["Iron Sword"])
             elif job == 1:
@@ -379,7 +379,7 @@ class Dungeon:
                 enemy.inventory.append(weaponDict["Mythril Dagger"])
             else:
                 enemy.inventory.append(weaponDict["Staff of Wisdom"])
-        if armor_chance > 0.25:
+        if armor_chance > 0.4:
             if job == 0:
                 enemy.inventory.append(armorDict["Iron Chestplate"])
             elif job == 1:
