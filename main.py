@@ -74,6 +74,7 @@ def load_audio():
         pygame.mixer.Sound("Resources/SFX/ILLEGAL_MOVE.mp3"),
         pygame.mixer.Sound("Resources/SFX/ITEM_FOUND.mp3"),
         pygame.mixer.Sound("Resources/SFX/MAGIC.mp3"),
+        pygame.mixer.Sound("Resources/SFX/GOBLIN_AGGRO.mp3")
     ]
     music = [
         "Resources/Music/MENU_THEME.wav"
@@ -205,17 +206,13 @@ while run:
         # COMBAT STATE - SEE BELOW.
         ##############################################################
 
-        # WORK HERE
-        #           - Make it so aggroed enemies can't move to tile that contains another enemy or player
-        #           - Make chests appear as floor in isometric
-        #           - Spawn items in chests and in enemy inventory
-        #           - Create save file/load system
-        #           - Place key in 1 of the chests and implement teleporter system
+            # Condense this and combine code common with MOVING_STATE into function
             if len(aggro_enemies) > 0:
                 battle_grid.actors.extend(aggro_enemies)
                 battle_grid.actors.append(player)
                 enemies_ready = 0
                 if not enemies_aggroed:
+                    sounds[constants.GOBLIN_AGGRO].play()
                     enemies_aggroed = True
                     enemy_move_start = pygame.time.get_ticks()
                 else:
