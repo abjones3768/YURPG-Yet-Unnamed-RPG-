@@ -413,7 +413,6 @@ while run:
                     elif e.key == pygame.K_t:
                         cur_combat_actor = cur_combat_actor + 1 if cur_combat_actor < len(battle_grid.actors)-1 else 0
                         mvmt_actor = battle_grid.actors[cur_combat_actor]
-                        print(f"Movement actor: {battle_grid.actors[cur_combat_actor]}")
 
                 # MOUSE CLICK INPUT HANDLING
                 # RIGHT NOW THIS IS JUST FOR MOVEMENT
@@ -453,7 +452,7 @@ while run:
                     turn_loop = False
                 if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
                     # If enemy is 1 tile away from player, attack. Else, move.
-                    dist = abs(actor_turn, player)
+                    dist = abs(actor_turn.cur_tile - player.cur_tile)
                     if dist == 1 or dist == dungeon_cols:
                         pass
                     else:
