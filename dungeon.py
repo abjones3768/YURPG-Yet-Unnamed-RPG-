@@ -306,47 +306,45 @@ class Dungeon:
     # Spawn distribution of enemies in each room based on size.
     def fill_rooms(self):
         for room in self.rooms:
-            if room != self.start_room:
-                # Calculate number of enemies in each room
-                size = room.width * room.height
-                room_level = 0
-                enemy_count = 0
-                chest_count = 0
-                if size < 1600:
-                    room_level = 1
-                elif size < 3200:
-                    room_level = 2
-                elif size < 6400:
-                    room_level = 3
-                else:
-                    room_level = 4
-                enemy_chance = room_level/4
-                chest_chance = room_level/8
-                if random.random() <= enemy_chance:
-                    enemy_count = random.randint(1, 2) * room_level
-                    chest_count = random.randint(1, room_level)
+            # Calculate number of enemies in each room
+            size = room.width * room.height
+            room_level = 0
+            enemy_count = 0
+            chest_count = 0
+            if size < 1600:
+                room_level = 1
+            elif size < 3200:
+                room_level = 2
+            elif size < 6400:
+                room_level = 3
+            else:
+                room_level = 4
+            enemy_chance = room_level/4
+            chest_chance = room_level/8
+            if random.random() <= enemy_chance:
+                enemy_count = random.randint(1, 2) * room_level
+                chest_count = random.randint(1, room_level)
 
-                # Place any enemies in random floor tiles
-                placed_enemies = 0
-                while placed_enemies < enemy_count:
-                    place_tile = constants.SHADOW
-                    while self.tiles[place_tile] != constants.FLOOR:
-                        place_col = random.randint(room.x1 + 2, room.x2 - 2)
-                        place_row = random.randint(room.y1 + 2, room.y2 - 2)
-                        place_tile = place_row * self.map_width + place_col
-                    enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                    print(f"Enemy created at index [{place_tile%self.map_width}][{place_tile//self.map_width}]")
-                    self.enemies[place_tile] = enemy
-                    self.tiles[place_tile] = constants.ENEMY
-                    placed_enemies += 1
+            # Place any enemies in random floor tiles
+            placed_enemies = 0
+            while placed_enemies < enemy_count:
+                place_tile = constants.SHADOW
+                while self.tiles[place_tile] != constants.FLOOR:
+                    place_col = random.randint(room.x1 + 2, room.x2 - 2)
+                    place_row = random.randint(room.y1 + 2, room.y2 - 2)
+                    place_tile = place_row * self.map_width + place_col
+                enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                self.enemies[place_tile] = enemy
+                self.tiles[place_tile] = constants.ENEMY
+                placed_enemies += 1
 
-                placed_chests = 0
-                while placed_chests < chest_count:
-                    place_tile = constants.SHADOW
-                    while self.tiles[place_tile] != constants.FLOOR:
-                        place_col = random.randint(room.x1 + 2, room.x2 - 2)
-                        place_row = random.randint(room.y1 + 2, room.y2 - 2)
-                        place_tile = place_row * self.map_width + place_col
-                    room.chests[place_tile] = []
-                    self.tiles[place_tile] = constants.CHEST
-                    placed_chests += 1
+            placed_chests = 0
+            while placed_chests < chest_count:
+                place_tile = constants.SHADOW
+                while self.tiles[place_tile] != constants.FLOOR:
+                    place_col = random.randint(room.x1 + 2, room.x2 - 2)
+                    place_row = random.randint(room.y1 + 2, room.y2 - 2)
+                    place_tile = place_row * self.map_width + place_col
+                room.chests[place_tile] = []
+                self.tiles[place_tile] = constants.CHEST
+                placed_chests += 1

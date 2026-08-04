@@ -124,6 +124,7 @@ renderer = None
 battle_grid = None
 aggro_enemies = []
 enemies_aggroed = False
+cur_combat_actor = 0
 
 # Game loop
 run = True
@@ -147,6 +148,8 @@ while run:
         rend_mode = constants.TOP_DOWN
         start_combat = False
         has_moved = False
+        enemies_aggroed = False
+        combat_started = False
         aggro_enemies.clear()
         continue
     
@@ -194,19 +197,27 @@ while run:
         # WHEN AT LEAST 1 ENEMY IS DETECTED IN RANGE, IT WILL ENTER
         # COMBAT STATE - SEE BELOW.
         ##############################################################
+
+        # WORK HERE - Make it so if enemies are aggroed, player movement stops
+        #           - Make it so aggroed enemies can't move to tile that contains another enemy or player
+        #           - Make chests appear as floor in isometric
+        #           - Spawn items in chests and in enemy inventory
+        #           - Create save file/load system
+        #           - Place key in 1 of the chests and implement teleporter system
             if len(aggro_enemies) > 0:
-                battle_grid.enemies.extend(aggro_enemies)
+                battle_grid.actors.extend(aggro_enemies)
+                battle_grid.actors.append(player)
                 enemies_ready = 0
                 if not enemies_aggroed:
                     enemies_aggroed = True  # set this to false after combat triggered
                     enemy_move_start = pygame.time.get_ticks()
                 else:
-                    if pygame.time.get_ticks() - enemy_move_start > 10:
+                    if pygame.time.get_ticks() - enemy_move_start > 5:
                         for enemy in aggro_enemies:
                             next_tile = enemy.path_to_player[enemy.move_step]
                             x_dist = abs(player.x - enemy.x)
                             y_dist = abs(player.y - enemy.y)
-                            if enemy.move_step < len(enemy.path_to_player) - 8:
+                            if enemy.move_step < len(enemy.path_to_player) - 10:
                                 next_tile = enemy.path_to_player[enemy.move_step]
                                 dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
                                 dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
@@ -219,10 +230,9 @@ while run:
                                 elif dy < enemy.y:
                                     enemy.y -= speed
                                 if enemy.x == dx and enemy.y == dy:
+                                    dungeon.tiles[enemy.cur_tile] = constants.FLOOR
                                     enemy.prev_tile = enemy.cur_tile
                                     enemy.cur_tile = next_tile
-                                    dungeon.tiles[enemy.prev_tile] = constants.FLOOR
-                                    dungeon.tiles[enemy.cur_tile] = constants.ENEMY
                                     enemy.move_step += 1
                             else:
                                 enemies_ready += 1
@@ -231,6 +241,8 @@ while run:
                                     start_combat = True
                                     game_state = constants.COMBAT_STATE
                                     prev_game_state = constants.EXPLORATION_STATE
+                                    aggro_enemies.clear()
+                                    enemies_aggroed = False
                                     break
 
 
@@ -285,62 +297,62 @@ while run:
                             # MOVING STATE #
         ########################################################
 
-        # MOVE PLAYER ALONG PATH TO DESTINATION TILE AT INCREMENT OF 'SPEED'
+        # MOVE ACTOR ALONG PATH TO DESTINATION TILE AT INCREMENT OF 'SPEED'
         # PER FRAME UNTIL EITHER DESTINATION IS REACHED OR PATH IS CUT SHORT
-        # DUE TO ILLEGAL MOVE.
+        # DUE TO ILLEGAL MOVE OR HITTING MAX MOVEMENT RANGE.
 
-        # NEED TO MODIFY TO DO A CHECK TO SEE IF len(move_path) IS LESS
-        # THAN THE ACTOR'S MOVEMENT RANGE.
-
-        # ALSO NEED TO MODIFY SO THAT IF CLICKED TILE IS A CHEST, IT STOPS
-        # PLAYER AT TILE BEFORE IT AND OPENS THE CHEST.
         elif game_state == constants.MOVING_STATE:
-            illegal_move = False
-            if move_step_count < len(move_path) and (mvmt_actor is player or move_step_count <= mvmt_actor.movementRange):
-                next_tile = move_path[move_step_count]
-                dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
-                dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
-                if pygame.time.get_ticks() - move_start_time > 10:
-                    is_destination = False
-                    if dx > mvmt_actor.x:
-                        mvmt_actor.x += speed
-                    elif dx < mvmt_actor.x:
-                        mvmt_actor.x -= speed
-                    elif dy > mvmt_actor.y:
-                        mvmt_actor.y += speed
-                    elif dy < mvmt_actor.y:
-                        mvmt_actor.y -= speed
-                    if mvmt_actor.x == dx and mvmt_actor.y == dy:
-                        mvmt_actor.prev_tile = mvmt_actor.cur_tile
-                        mvmt_actor.cur_tile = next_tile
-                        if mvmt_actor is player:
-                            if dungeon.tiles[next_tile] == constants.DOOR:
-                                if rend_mode == constants.TOP_DOWN:
-                                    sounds[constants.OPEN_DOOR].play()
-                                    dungeon.open_door(next_tile)
-                                    dungeon.in_room = not dungeon.in_room
-                                    changed_rooms = True
-                                else:
-                                    illegal_move = True
-                                    game_state = prev_game_state
-                                    prev_game_state = constants.MOVING_STATE
-                            if not illegal_move:
-                                has_moved = True
-                                move_step_count += 1
-                        else:
-                            move_step_count += 1
-                    move_start_time = pygame.time.get_ticks()
-            else:
-                game_state = prev_game_state
+            if len(aggro_enemies) > 0:
+                game_state = constants.EXPLORATION_STATE
                 prev_game_state = constants.MOVING_STATE
-                if mvmt_actor is player:
-                    #shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
-                    if changed_rooms:
-                        changed_rooms = False
-                        if dungeon.in_room:
-                            dungeon.current_room = dungeon.get_current_room(player)
-                        else:
-                            dungeon.current_room = None
+            else:
+                illegal_move = False
+                if move_step_count < len(move_path) and (mvmt_actor is player or move_step_count <= mvmt_actor.movementRange):
+                    next_tile = move_path[move_step_count]
+                    dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
+                    dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
+                    if pygame.time.get_ticks() - move_start_time > 10:
+                        if dx > mvmt_actor.x:
+                            mvmt_actor.x += speed
+                        elif dx < mvmt_actor.x:
+                            mvmt_actor.x -= speed
+                        elif dy > mvmt_actor.y:
+                            mvmt_actor.y += speed
+                        elif dy < mvmt_actor.y:
+                            mvmt_actor.y -= speed
+                        if mvmt_actor.x == dx and mvmt_actor.y == dy:
+                            print(f"{mvmt_actor} move from [{mvmt_actor.cur_tile%dungeon_cols}][{mvmt_actor.cur_tile//dungeon_cols}] to [{next_tile%dungeon_cols}][{next_tile//dungeon_cols}]")
+                            mvmt_actor.prev_tile = mvmt_actor.cur_tile
+                            mvmt_actor.cur_tile = next_tile
+                            if mvmt_actor is player:
+                                if dungeon.tiles[next_tile] == constants.DOOR:
+                                    if rend_mode == constants.TOP_DOWN:
+                                        sounds[constants.OPEN_DOOR].play()
+                                        dungeon.open_door(next_tile)
+                                        dungeon.in_room = not dungeon.in_room
+                                        changed_rooms = True
+                                    else:
+                                        illegal_move = True
+                                        game_state = prev_game_state
+                                        prev_game_state = constants.MOVING_STATE
+                                if not illegal_move:
+                                    has_moved = True
+                                    move_step_count += 1
+                            else:
+                                move_step_count += 1
+                                has_moved = True
+                        move_start_time = pygame.time.get_ticks()
+                else:
+                    game_state = prev_game_state
+                    prev_game_state = constants.MOVING_STATE
+                    if mvmt_actor is player:
+                        #shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
+                        if changed_rooms:
+                            changed_rooms = False
+                            if dungeon.in_room:
+                                dungeon.current_room = dungeon.get_current_room(player)
+                            else:
+                                dungeon.current_room = None
 
 
         ########################################################
@@ -375,6 +387,10 @@ while run:
                         menu.menu_state = constants.SKILL_MENU
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.COMBAT_STATE
+                    elif e.key == pygame.K_t:
+                        cur_combat_actor = cur_combat_actor + 1 if cur_combat_actor < len(battle_grid.actors)-1 else 0
+                        mvmt_actor = battle_grid.actors[cur_combat_actor]
+                        print(f"Movement actor: {battle_grid.actors[cur_combat_actor]}")
                     
                     #elif e.key == pygame.K_m:
                         #rend_mode = constants.TOP_DOWN
@@ -393,8 +409,8 @@ while run:
                     has_moved = True
 
                     if dungeon.tiles[move_dest] == constants.FLOOR:
-                        move_path = player.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
-                        if move_path and player.movementRange >= len(move_path)-1:
+                        move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
+                        if move_path and mvmt_actor.movementRange >= len(move_path)-1:
                             mvmt_actor = player
                             move_step_count = 0
                             game_state = constants.MOVING_STATE
@@ -450,6 +466,6 @@ while run:
 
     pygame.display.flip()
     game_time = clock.tick(60)
-    if not menu.playing:
-        pygame.quit()
-        sys.exit() 
+    run = menu.playing
+pygame.quit()
+sys.exit()
