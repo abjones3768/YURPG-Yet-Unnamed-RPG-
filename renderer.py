@@ -142,16 +142,18 @@ class Renderer:
                                 for j in range(0, 3):
                                     pos[1] -= tile_size
                                     battle_grid.foreground.blit(images[tilemap[i]], pos)
+                battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
-                    if actor != p:
-                        actor_pos = self.get_iso_actor_pos(room, actor)
-                        battle_grid.foreground.blit(images[constants.ENEMY], actor_pos)
-                battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
+                    if actor is p:
+                        battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
+                    else:
+                        battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
             elif moved_status:
                 battle_grid.foreground.fill((0, 0, 0, 0))
                 room = dungeon.get_current_room(p)
+                render_actor_order = []
 
                 # When drawing player after each move, check if the player sprite is
                 # colliding with
@@ -167,11 +169,12 @@ class Renderer:
                                     pos[1] -= tile_size
                                     battle_grid.foreground.blit(images[tilemap[i]], pos)
                             pos[1] += tile_size
+                battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
-                    if actor != p:
-                        actor_pos = self.get_iso_actor_pos(room, actor)
-                        battle_grid.foreground.blit(images[constants.ENEMY], actor_pos)
-                battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
+                    if actor is p:
+                        battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
+                    else:
+                        battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
             else:
