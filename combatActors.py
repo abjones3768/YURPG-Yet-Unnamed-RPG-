@@ -79,12 +79,7 @@ class Player(Actor):
         self.level = 1 
         self.exp = 0 
 
-        self.items = {} # Dictionary which uses item name as reference, value is the amount held
-
-        self.items["Potion"] = 3
-        self.items["Elixir"] = 1
-        self.inventory.append("Potion")
-        self.inventory.append("Elixir")
+        self.initInventory()
 
         match job:
             case _ if job == WARRIOR: # Default stat definitions
@@ -143,6 +138,13 @@ class Player(Actor):
                 print("invalid job lol")
                 # this should be validated before the constructor is called
     
+    def initInventory(self):
+        self.items = {} # Dictionary which uses item name as reference, value is the amount held
+        self.items["Potion"] = 3
+        self.items["Elixir"] = 1
+        self.inventory.append("Potion")
+        self.inventory.append("Elixir")
+
     def expNeeded(self):
         return 100 + (self.level * 50)
 
