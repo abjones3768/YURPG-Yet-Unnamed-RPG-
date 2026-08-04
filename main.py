@@ -203,7 +203,7 @@ while run:
         # COMBAT STATE - SEE BELOW.
         ##############################################################
 
-        # WORK HERE - Make it so if enemies are aggroed, player movement stops
+        # WORK HERE
         #           - Make it so aggroed enemies can't move to tile that contains another enemy or player
         #           - Make chests appear as floor in isometric
         #           - Spawn items in chests and in enemy inventory
@@ -214,7 +214,7 @@ while run:
                 battle_grid.actors.append(player)
                 enemies_ready = 0
                 if not enemies_aggroed:
-                    enemies_aggroed = True  # set this to false after combat triggered
+                    enemies_aggroed = True
                     enemy_move_start = pygame.time.get_ticks()
                 else:
                     if pygame.time.get_ticks() - enemy_move_start > 5:
@@ -235,7 +235,8 @@ while run:
                                 elif dy < enemy.y:
                                     enemy.y -= speed
                                 if enemy.x == dx and enemy.y == dy:
-                                    dungeon.tiles[enemy.cur_tile] = constants.FLOOR
+                                    dungeon.tiles[enemy.prev_tile] = constants.FLOOR
+                                    dungeon.tiles[enemy.cur_tile] = constants.ENEMY
                                     enemy.prev_tile = enemy.cur_tile
                                     enemy.cur_tile = next_tile
                                     enemy.move_step += 1
@@ -392,14 +393,13 @@ while run:
                         menu.menu_state = constants.SKILL_MENU
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.COMBAT_STATE
+
+                    # FOR TESTING: press 't' key to cycle mvmt_actor through battle_grid actors
+                    # Can delete this when it is no longer needed
                     elif e.key == pygame.K_t:
                         cur_combat_actor = cur_combat_actor + 1 if cur_combat_actor < len(battle_grid.actors)-1 else 0
                         mvmt_actor = battle_grid.actors[cur_combat_actor]
                         print(f"Movement actor: {battle_grid.actors[cur_combat_actor]}")
-                    
-                    #elif e.key == pygame.K_m:
-                        #rend_mode = constants.TOP_DOWN
-                        #game_state = constants.EXPLORATION_STATE
 
                 # MOUSE CLICK INPUT HANDLING
                 # RIGHT NOW THIS IS JUST FOR MOVEMENT
@@ -471,7 +471,9 @@ while run:
             #                move_start_time = pygame.time.get_ticks()
             #
             #       - This will initiate MOVING_STATE and the enemy will just move however many
-            #         tiles their movementRange allows on the quickest path to the player.
+            #         tiles their movementRange allows on the quickest path to the player. We will need
+            #         a check to determine their behavior that tells them to move if distance to player is
+            #         greater than constants.TILE_SIZE*2 (1 isometric tile), else attack.
             #               
             #       - There are 2 things we need to add:
             #
@@ -479,7 +481,7 @@ while run:
             #                   outside your mvmt range, but I'll add that.
             #
             #               2.  I still need to implement a check for the player that doesn't let you click
-            #                   on a tile with 
+            #                   on a tile with an enemy in it or letting enemies take up the same tile.
 
     pygame.display.flip()
     game_time = clock.tick(60)
