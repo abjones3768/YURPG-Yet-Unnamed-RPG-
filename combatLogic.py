@@ -6,15 +6,6 @@ from combatActors import *
 from combatDefines import *
 from constants import *
 
-"""
-TODO:
-- Level system and stat growth (jeremy)
-- Item rarity
-- Enemy rarity? (may just be the level)
-- Expand content
-
-"""
-
 def battleGetTurns(actors, battleTimer): # Steps through battle state when called
     if not battleTimer:
         for actor in actors: 
@@ -31,102 +22,6 @@ def battleGetTurns(actors, battleTimer): # Steps through battle state when calle
                 noTurn = False
     random.shuffle(getsTurn) # If multiple actors got a turn in the last loop, randomize their order
     return getsTurn
-
-def tuyrncode():
-    for actor in turns:
-        if isinstance(actor, Player): # If actor is a player
-            action = 0
-            canMove = True
-            turnOver = False
-            hasAttacked = False
-            # get player menu input
-            # move, attack, magic, items, wait
-            while not turnOver: # the spaghetti code here exists so you can move independent of whether or not the player
-                if hasAttacked and canMove: # has attacked yet, players can move before or after attack/magic etc
-                    pass
-                    # this is a little funky but the only available options here should be moving and waiting
-                if canMove == False:
-                    action += 1 # idea behind this is the menu should go from displaying something like
-                    # 1. Move
-                    # 2. Attack
-                    # 3. Magic
-                    # etc. to
-                    # 1. Attack
-                    # 2. Magic
-                    # 3. Items
-                    # this is so the switch statement can be reused but the choice is adjusted based on menu gui
-                    # this can be changed if needed but the logic is sound i think
-                match action:
-                    case _ if action == MOVE:
-                        canMove = False
-                        # get player move coordinates (possibly use existing dungeon pathfinding to validate?)
-                        pass
-                    case _ if action == ATTACK:
-                        hasAttacked = True
-                        # ask for direction and damage enemy
-                        pass
-                    case _ if action == MAGIC:
-                        hasAttacked = True
-                        # open magic menu, select spell, damage enemy (magic range could be determined by movement range?)
-                        pass
-                    case _ if action == ITEMS:
-                        hasAttacked = True
-                        # open magic menu, select item, use item (can be used on self or directly adjacent actor)
-                        pass
-                    case _ if action == WAIT:
-                        # just do nothing
-                        turnOver = True
-                    case _:
-                        # invalid move lol
-                        exit()
-                if not canMove and hasAttacked:
-                    turnOver = False
-                    
-
-        else: # if actor is enemy
-            playerList = [] # List of every player actor
-            for rows in grid:
-                for actors in rows:
-                    if isinstance(actors, Player):
-                        playerList.append(actors) # Populate list
-
-            coordList = [] # List of coordinates for player actors
-            for i in range(len(playerList)):
-                coordList.append(actorDict[playerList[i]]) # Populate list
-
-            distanceList = [] # Absolute distance to all player actors
-            for i in range(len(coordList)): 
-                distanceList.append(coordList[i][0] + coordList[i][1]) # Populate list
-            
-            closest = distanceList.index(min(distanceList)) # Find closest player actor
-            target = playerList[closest]
-
-            canAttack = False
-            # pathfinding and movement goes here :)
-            if canAttack: # Set this to true if an enemy pathfinds to a spot directly adjacent to a player actor.
-                canAttack = False
-                attack = random.choice(actor.attackList) # Grabs a random attack from list
-                damage = attack(actor, target)
-                # Attack functions damage defending actor, show damage number on screen somehow
-                if target.health < 1: # If target died
-                    # Show that actor has died on screen
-                    grid[actorDict[target][0]][actorDict[target][1]] = FLOOR # we love garbage collection
-                    actorDict.pop(target) # Remove from coordinate dictionary
-                    battleTimer.pop(target) # Remove from battle timer
-    playerPresent = False
-    enemyPresent = False
-    for actor in actorDict: # Iterate through actor dict
-        if isinstance(actor, Player): # If current actor is a player
-            playerPresent = True
-        else: # If actor is not a player, it must be an enemy
-            enemyPresent = True
-    if not playerPresent:
-        pass
-        # Lose condition, end game or something
-    if not enemyPresent:
-        pass
-        # Win condition, end encounter and return to dungeon view
-            
 
 # Remaining functions are text based display functions used for the testing environment
 

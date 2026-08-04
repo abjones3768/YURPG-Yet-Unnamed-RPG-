@@ -55,9 +55,27 @@ class Potion(Item):
             actor.health = actor.maxHealth
     usageMessage = f"Healed {power} health!"
 
+class LargePotion(Item):
+    name = "Large Potion"
+    power = 100
+    def usageFunction(self, actor):
+        actor.health += self.power
+        if actor.health > actor.maxHealth:
+            actor.health = actor.maxHealth
+    usageMessage = f"Healed {power} health!"
+
 class Elixir(Item):
     name = "Elixir"
     power = 10
+    def usageFunction(self, actor):
+        actor.mana += self.power
+        if actor.mana > actor.maxMana:
+            actor.mana = actor.maxMana
+    usageMessage = f"Healed {power} mana!"
+
+class LargeElixir(Item):
+    name = "Large Elixir"
+    power = 50
     def usageFunction(self, actor):
         actor.mana += self.power
         if actor.mana > actor.maxMana:
@@ -93,3 +111,5 @@ def armorInit():
 def itemInit():
     itemDict["Potion"] = Potion()
     itemDict["Elixir"] = Elixir()
+    itemDict["Large Potion"] = Potion()
+    itemDict["Large Elixir"] = Elixir()
