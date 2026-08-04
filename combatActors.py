@@ -95,7 +95,7 @@ class Player(Actor):
                 self.speed = 3 # default 5
                 self.magic = 1
 
-                self.weapon = "Sword"
+                self.weapon = "Iron Sword"
                 self.armor = "Chestplate"
                 self.accessory = "Armband"
             case _ if job == MAGE:

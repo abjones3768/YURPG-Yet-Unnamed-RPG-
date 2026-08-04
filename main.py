@@ -334,7 +334,7 @@ while run:
                         elif dy < mvmt_actor.y:
                             mvmt_actor.y -= speed
                         if mvmt_actor.x == dx and mvmt_actor.y == dy:
-                            print(f"{mvmt_actor} move from [{mvmt_actor.cur_tile%dungeon_cols}][{mvmt_actor.cur_tile//dungeon_cols}] to [{next_tile%dungeon_cols}][{next_tile//dungeon_cols}]")
+                            # print(f"{mvmt_actor} move from [{mvmt_actor.cur_tile%dungeon_cols}][{mvmt_actor.cur_tile//dungeon_cols}] to [{next_tile%dungeon_cols}][{next_tile//dungeon_cols}]")
                             mvmt_actor.prev_tile = mvmt_actor.cur_tile
                             mvmt_actor.cur_tile = next_tile
                             if mvmt_actor is player:
@@ -449,7 +449,7 @@ while run:
                 print(actor_turn)
                 print(turns)
                 if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
-                    move_path = actor_turn.move(dungeon.player_tile, dungeon, game_state, battle_grid)
+                    move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
                     print("should be moving")
                     if move_path:
                         print("found path")
@@ -460,7 +460,73 @@ while run:
                         move_start_time = pygame.time.get_ticks()
                         turn_loop = True
                 else:
-                    input("player turn")
+                    action = 0
+                    while action < 1 or action > 5:
+                        action = int(input(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
+                    if action == MOVE:
+                        input("player move (hit enter)")
+                        turn_loop = True
+                    if action == ATTACK:
+                        attack = ""
+                        while attack not in {'U', 'D', 'L', 'R'}:
+                            print("Choose a direction to attack (U/D/L/R)")
+                            attack = input()
+                            attack.strip()
+                        x = actor_turn.x
+                        y = actor_turn.y
+                        if attack == 'U': y -= 2*TILE_SIZE
+                        if attack == 'D': y += 2*TILE_SIZE
+                        if attack == 'L': x -= 2*TILE_SIZE
+                        if attack == 'R': x += 2*TILE_SIZE
+                        target = None
+                        for actor in battle_grid.actors:
+                            if actor.x == x and actor.y == y:
+                                target = actor
+                        if isinstance(target, Actor): # If attack is targeting a square with an actor
+                            damage = playerAttack(actor_turn, target)                        
+                            print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
+                            if target.health < 1:
+                                print(f"{target.name} defeated!") 
+                                actor.gainExp(target.level)
+                                battleTimer.pop(target)
+                                # remove target from grid somehow
+                                # removing them from battleTimer at least stops them from getting a turn so they are "dead"
+                        else:
+                            print("Miss!")
+                    if action == MAGIC:
+                        print("Magic: ")
+                        magicNum = len(actor.magicAttacks)
+                        for i in range(len(actor.magicAttacks)):
+                            print(f"{i + 1}. {actor.magicAttacks[i]}")
+                        choice = int(input("Choose a spell."))
+                        while choice > magicNum or choice < 1:
+                            choice = int(input("Choose a spell."))
+                        manaChoice = int(input(f"How much mana do you want to spend? Max: {actor.mana}"))
+                        while manaChoice > actor.mana or manaChoice < 1:
+                            manaChoice = int(input(f"How much mana do you want to spend? Max: {actor.mana}"))
+    
+                        damage = actor.magicAttacks[choice - 1](actor, actor, manaChoice)
+                        print(f"{actor.name} dealt {damage} damage to {actor.name}!")
+                        if actor.health < 1:
+                            TESTprintGrid(grid)
+                            print(f"{actor.name} defeated!")
+                            actorDict.pop(actor)
+                            battleTimer.pop(actor)
+                            actor = '-' 
+    
+                    if action == ITEMS:
+                        print("Items: ")
+                        itemNum = len(actor.inventory)
+                        for i in range(len(actor.inventory)):
+                            print(f"{i + 1}. {actor.inventory[i]}")
+                        choice = int(input("Choose an item."))
+                        while choice > itemNum or choice < 1:
+                            choice = int(input("Choose an item."))
+                        itemDict[actor.inventory[choice - 1]].usageFunction(actor)
+                        print(f"{actor.name} used {itemDict[actor.inventory[choice - 1]].name}. {itemDict[actor.inventory[choice - 1]].usageMessage}")
+    
+                    if action == WAIT:
+                        pass
                     turn_loop = True
                 
 
