@@ -1,5 +1,6 @@
 from combatDefines import *
 from combatItems import *
+import combatActors
 import random
 
 """RNG DOCS:
@@ -39,7 +40,10 @@ def enemyAttack(attacker, defender):
     return int(damage)
 
 def fireMagic(attacker, defender):
-    damage = attacker.magic + weaponDict[attacker.weapon].magicAttack - defender.magicDefense
+    damage = attacker.magic - defender.magicDefense
+
+    if isinstance(attacker, combatActors.Player):
+        damage += weaponDict[attacker.weapon].magicAttack 
     
     if defender.weakness == FIRE:
         damage *= 2

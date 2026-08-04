@@ -201,3 +201,43 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
         self.attackList.append(enemyAttack)
         self.path_to_player = []
         self.move_step = 0
+
+class SuperGoblin(Actor):
+    name = "Super Goblin"
+    movementRange = 10
+    health = 30
+    maxHealth = 30
+
+    strength = 8
+    speed = 3
+
+    level = 2
+
+    attackList = list() # List of pointers to all abilites (spells and basic attack)
+
+    def __init__(self, x, y, cur_tile):
+        super().__init__(x, y, cur_tile, constants.ENEMY)
+        self.attackList.append(enemyAttack)
+        self.path_to_player = []
+        self.move_step = 0
+
+class MagicGoblin(Actor):
+    name = "Goblin Mage"
+    movementRange = 6
+    health = 20
+    maxHealth = 20
+    
+    magic = 8
+
+    strength = 1
+    speed = 2
+
+    level = 3
+
+    attackList = list() # List of pointers to all abilites (spells and basic attack)
+
+    def __init__(self, x, y, cur_tile):
+        super().__init__(x, y, cur_tile, constants.ENEMY)
+        self.attackList.append(fireMagic)
+        self.path_to_player = []
+        self.move_step = 0
