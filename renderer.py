@@ -132,7 +132,7 @@ class Renderer:
                     for col in range(battle_grid.x1, battle_grid.x2):             
                             i = row * dungeon.map_width + col
                             pos = self.get_iso_pos(room, row, col)
-                            if tilemap[i] == constants.FLOOR or tilemap[i] == constants.CHEST:
+                            if tilemap[i] == constants.FLOOR or tilemap[i] == constants.CHEST or tilemap[i] == constants.ENEMY:
                                 battle_grid.background.blit(images[constants.FLOOR], pos)
                             elif tilemap[i] == constants.WATER:
                                 pos[1] += tile_size

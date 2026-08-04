@@ -1,5 +1,6 @@
 import pygame
 import constants
+import combatDefines
 
 
 class Menu:
@@ -18,16 +19,24 @@ class Menu:
 
         self.New_Button = self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)  #These will be the rectangle attributes for mouse collision detection
         self.Load_Button = self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-        self.Options_Button = self.draw_text('Options', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-        self.Credits_Button = self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+        self.Credits_Button = self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+        self.Quit_Button = self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
         self.Menu_Button = self.draw_text('Main Menu', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
         self.Exit_Button = self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
         self.Back_Button = self.draw_text('BACK', self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
         self.Skill_Button = self.draw_text_vertical("Skills", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .95, self.DISPLAY_H * .5, 90)
         self.Inventory_Button = self.draw_text_vertical("Inventory", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .05, self.DISPLAY_H * .5, 270)
+        self.Warrior_Button = self.draw_text("Warrior", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+        self.Rogue_Button = self.draw_text("Rogue", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+        self.Mage_Button = self.draw_text("Mage", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+        self.job_back_button = self.draw_text("Back", self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
         self.hovering = False
+        self.job = None
         self.menu_theme = menu_theme
         self.menu_theme.play(-1)
+
+    def get_player_job(self):
+        return self.job
 
     def display_menu(self):
         self.check_menu_events()
@@ -39,8 +48,8 @@ class Menu:
                     self.draw_text('Yet Unnamed', int(self.DISPLAY_W/constants.TILE_SIZE), self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                     self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W*.5, self.DISPLAY_H*.5) #Draws text on the middle of the screen
                     self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-                    self.draw_text('Options', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-                    self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                    self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                    self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
             
             case constants.INVENTORY: #inventory
                 self.display.fill(self.BLACK)  # Resets menu screen by filling in black
@@ -62,12 +71,22 @@ class Menu:
             case constants.CREDITS: #Credits
                 if self.hovering != True:
                     self.display.fill(self.BLACK)
-                    self.draw_text('Programmers', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .25)
+                    self.draw_text('Programmers', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                     self.draw_text('Breck', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .4)
                     self.draw_text('Daniel', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                     self.draw_text('Jeremy', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
                     self.draw_text('Adam', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
                     self.draw_text("BACK", self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+
+            case constants.JOB_SELECT:
+                if self.hovering != True:
+                    self.display.fill(self.BLACK)
+                    self.draw_text('Select Class', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                    self.draw_text('Warrior', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+                    self.draw_text('Rogue', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+                    self.draw_text('Mage', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                    self.draw_text('Back', self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * 0.5, self.DISPLAY_H * .8)
+
 
         self.window.blit(self.display, (0, 0))  #Aligning our window and our display
         pygame.display.update()  #Will actually show the image on our monitor
@@ -98,22 +117,39 @@ class Menu:
             elif event.type == pygame.MOUSEBUTTONDOWN: #When clicking
                 if self.menu_state == constants.MAIN_MENU: #If it's the main menu
                     if self.New_Button.collidepoint(event.pos): #NEW GAME
-                        self.menu_theme.stop()
                         self.SFX[constants.BUTTON_CLICK].play()
-                        self.game_active = True
-                        self.menu_state = constants.NEW_GAME
+                        self.menu_state = constants.JOB_SELECT
                     elif self.Load_Button.collidepoint(event.pos): #LOAD GAME - not implemented yet
                         #self.menu_theme.stop()
                         self.SFX[constants.ILLEGAL_MOVE].play()
                         #self.menu_state = constants.IN_GAME
                         self.game_active = True
-                    elif self.Options_Button.collidepoint(event.pos): #OPTIONS
-                        self.SFX[constants.BUTTON_CLICK].play()
-                        self.menu_state = constants.OPTIONS_MENU
                     elif self.Credits_Button.collidepoint(event.pos):
                         self.SFX[constants.BUTTON_CLICK].play()
                         self.menu_state = constants.CREDITS
-    
+                    elif self.Quit_Button.collidepoint(event.pos): #OPTIONS
+                        self.playing = False
+
+                elif self.menu_state == constants.JOB_SELECT:
+                    if self.Warrior_Button.collidepoint(event.pos):
+                        self.job = combatDefines.WARRIOR
+                        self.menu_state = constants.NEW_GAME
+                        self.game_active = True
+                        self.menu_theme.stop()
+                    elif self.Rogue_Button.collidepoint(event.pos):
+                        self.job = combatDefines.ROGUE
+                        self.menu_state = constants.NEW_GAME
+                        self.game_active = True
+                        self.menu_theme.stop()
+                    elif self.Mage_Button.collidepoint(event.pos):
+                        self.job = combatDefines.MAGE
+                        self.menu_state = constants.NEW_GAME
+                        self.game_active = True
+                        self.menu_theme.stop()
+                    elif self.job_back_button.collidepoint(event.pos):
+                        self.menu_state = constants.MAIN_MENU
+                    self.SFX[constants.BUTTON_CLICK].play()
+
                 elif self.menu_state == constants.INVENTORY:
                     if self.Skill_Button.collidepoint(event.pos):
                         self.menu_state = constants.SKILL_MENU #GOTO SKILLS
@@ -146,34 +182,35 @@ class Menu:
                         self.draw_text('Yet Unnamed', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                         self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                         self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-                        self.draw_text('Options', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
                     elif self.Load_Button.collidepoint(event.pos):
                         self.hovering = True
                         self.display.fill(self.BLACK)
                         self.draw_text('Yet Unnamed', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                         self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                         self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-                        self.draw_text('Options', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
-                    elif self.Options_Button.collidepoint(event.pos):
-                        self.hovering = True
-                        self.display.fill(self.BLACK)
-                        self.draw_text('Yet Unnamed', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
-                        self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
-                        self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-                        self.draw_text('Options', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
                     elif self.Credits_Button.collidepoint(event.pos):
                         self.hovering = True
                         self.display.fill(self.BLACK)
                         self.draw_text('Yet Unnamed', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                         self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                         self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-                        self.draw_text('Options', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                    elif self.Quit_Button.collidepoint(event.pos):
+                        self.hovering = True
+                        self.display.fill(self.BLACK)
+                        self.draw_text('Yet Unnamed', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                        self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+                        self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+                        self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
                     else:
                         self.hovering = False
+
                 elif self.menu_state == constants.INVENTORY:
                     if self.Skill_Button.collidepoint(event.pos):
                         self.hovering = True
@@ -186,29 +223,66 @@ class Menu:
                         self.menu_state = constants.INVENTORY
                         self.display.fill(self.BLACK)
                         self.draw_text_vertical("Inventory", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .05, self.DISPLAY_H * .5, 270)
-                elif self.menu_state == 5:
-                    if self.Menu_Button.collidepoint(event.pos) and self.menu_state == 5:
+                elif self.menu_state == constants.OPTIONS_MENU:
+                    if self.Menu_Button.collidepoint(event.pos) and self.menu_state == constants.OPTIONS_MENU:
                         self.hovering = True
                         self.display.fill(self.BLACK)
                         self.draw_text('Main Menu', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                         self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
-                    elif self.Exit_Button.collidepoint(event.pos) and self.menu_state == 5:
+                    elif self.Exit_Button.collidepoint(event.pos) and self.menu_state == constants.OPTIONS_MENU:
                         self.hovering = True
                         self.display.fill(self.BLACK)
                         self.draw_text('Main Menu', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                         self.draw_text('Exit', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
                     else:
                         self.hovering = False
-                elif self.menu_state == 6:
+
+                elif self.menu_state == constants.CREDITS:
                     if self.Back_Button.collidepoint(event.pos):
                         self.hovering = True
                         self.display.fill(self.BLACK)
-                        self.draw_text('Programmers', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .25)
+                        self.draw_text('Programmers', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                         self.draw_text('Breck', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .4)
                         self.draw_text('Daniel', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
                         self.draw_text('Jeremy', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
                         self.draw_text('Adam', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
-                        self.draw_text("BACK", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                        self.draw_text("BACK", self.DISPLAY_W//constants.TILE_SIZE//6, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+                    else:
+                        self.hovering = False
+
+                elif self.menu_state == constants.JOB_SELECT:
+                    if self.Warrior_Button.collidepoint(event.pos):
+                        self.hovering = True
+                        self.display.fill(self.BLACK)
+                        self.draw_text('Select Class', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                        self.draw_text('Warrior', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+                        self.draw_text('Rogue', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+                        self.draw_text('Mage', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Back', self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * 0.5, self.DISPLAY_H * .8)
+                    elif self.Rogue_Button.collidepoint(event.pos):
+                        self.hovering = True
+                        self.display.fill(self.BLACK)
+                        self.draw_text('Select Class', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                        self.draw_text('Warrior', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+                        self.draw_text('Rogue', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+                        self.draw_text('Mage', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Back', self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * 0.5, self.DISPLAY_H * .8)
+                    elif self.Mage_Button.collidepoint(event.pos):
+                        self.hovering = True
+                        self.display.fill(self.BLACK)
+                        self.draw_text('Select Class', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                        self.draw_text('Warrior', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+                        self.draw_text('Rogue', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+                        self.draw_text('Mage', self.DISPLAY_W//constants.TILE_SIZE//2, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Back', self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * 0.5, self.DISPLAY_H * .8)
+                    elif self.job_back_button.collidepoint(event.pos):
+                        self.hovering = True
+                        self.display.fill(self.BLACK)
+                        self.draw_text('Select Class', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                        self.draw_text('Warrior', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)
+                        self.draw_text('Rogue', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
+                        self.draw_text('Mage', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
+                        self.draw_text('Back', self.DISPLAY_W//constants.TILE_SIZE//6, self.DISPLAY_W * 0.5, self.DISPLAY_H * .8) 
                     else:
                         self.hovering = False
 

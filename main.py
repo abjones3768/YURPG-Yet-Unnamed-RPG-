@@ -142,7 +142,8 @@ while run:
         dungeon = Dungeon(constants.TILE_SIZE, 1, 1, dungeon_cols, dungeon_rows, 64, 20)
         dungeon.generateDungeon()
         game_state = constants.EXPLORATION_STATE
-        player = Player(dungeon.player_tile%dungeon_cols*constants.TILE_SIZE, dungeon.player_tile//dungeon_cols*constants.TILE_SIZE, dungeon.player_tile, "TEST", 2)
+        job = menu.get_player_job()
+        player = Player(dungeon.player_tile%dungeon_cols*constants.TILE_SIZE, dungeon.player_tile//dungeon_cols*constants.TILE_SIZE, dungeon.player_tile, "TEST", job)
         shadowcaster = Shadowcaster(dungeon_cols, dungeon_rows)
         shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
         renderer = Renderer(viewport_cols, viewport_rows)
@@ -156,6 +157,7 @@ while run:
         enemies_aggroed = False
         combat_started = False
         aggro_enemies.clear()
+        print(f"Player job: {job}")
         continue
     
     # On each frame, clear and redraw the screen

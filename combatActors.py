@@ -56,13 +56,13 @@ class Actor: # Base actor class from which players and enemies inherit from
 
     attackList = list() # List of function pointers to valid attacks
 
+    inventory = list() # List of item names as strings that refer to dict of item stats
+
 class Player(Actor):
     job = int()
 
     exp = int()
     totalExp = int() 
-
-    inventory = list() # List of item names as strings that refer to dict of item stats
 
     # Equipment variables are the names of the equipment.
     # Equipment names serve as keys for a dictionary containing structs that define behavior and stats.
@@ -178,7 +178,7 @@ class Player(Actor):
 
 class Goblin(Actor): # Remaining class definitions are for enemy types
     name = "Goblin"
-    movementRange = 2
+    movementRange = 8
     health = 10
     maxHealth = 10
 
