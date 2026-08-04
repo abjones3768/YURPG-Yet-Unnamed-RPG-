@@ -121,6 +121,8 @@ class Player(Actor):
                 self.accessory = "Necklace" # all of the accessories are unused basically
 
                 self.magicAttacks.append(fireMagic)
+                self.magicAttacks.append(iceMagic)
+                self.magicAttacks.append(thunderMagic)
             case _ if job == ROGUE:
                 self.movementRange = 12
                 self.maxHealth = 40

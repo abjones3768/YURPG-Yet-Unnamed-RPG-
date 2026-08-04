@@ -63,3 +63,50 @@ def fireMagic(attacker, defender):
     defender.health -= damage
     return int(damage)
 
+def iceMagic(attacker, defender):
+    damage = attacker.magic - defender.magicDefense
+
+    if isinstance(attacker, combatActors.Player):
+        damage += weaponDict[attacker.weapon].magicAttack 
+    
+    if defender.weakness == ICE:
+        damage *= 2
+    if defender.resistant == ICE:
+        damage /= 2
+    if defender.immune == ICE:
+        return 0
+    if defender.absorb == ICE:
+        damage = -damage
+    if damage < 0:
+        damage = 0
+
+    randy = random.randint(-50, 50)
+    mul = float(randy)/100
+    mul += 1
+    damage = damage * mul
+    defender.health -= damage
+    return int(damage)
+
+def thunderMagic(attacker, defender):
+    damage = attacker.magic - defender.magicDefense
+
+    if isinstance(attacker, combatActors.Player):
+        damage += weaponDict[attacker.weapon].magicAttack 
+    
+    if defender.weakness == THUNDER:
+        damage *= 2
+    if defender.resistant == THUNDER:
+        damage /= 2
+    if defender.immune == THUNDER:
+        return 0
+    if defender.absorb == THUNDER:
+        damage = -damage
+    if damage < 0:
+        damage = 0
+
+    randy = random.randint(-50, 50)
+    mul = float(randy)/100
+    mul += 1
+    damage = damage * mul
+    defender.health -= damage
+    return int(damage)
