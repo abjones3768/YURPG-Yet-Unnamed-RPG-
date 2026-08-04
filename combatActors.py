@@ -18,6 +18,8 @@ class Actor: # Base actor class from which players and enemies inherit from
         self.cur_tile = cur_tile
         self.prev_tile = 0
         self.tile_type = tile_type
+        self.inventory = list() # List of item names as strings that refer to dict of item stats
+
 
     # Destination is the target tile index in the 1D tilemap of the dungeon
     # Other args are for pathfinder functionality
@@ -56,8 +58,6 @@ class Actor: # Base actor class from which players and enemies inherit from
 
     attackList = list() # List of function pointers to valid attacks
 
-    inventory = list() # List of item names as strings that refer to dict of item stats
-
 class Player(Actor):
     job = int()
 
@@ -78,8 +78,13 @@ class Player(Actor):
         self.job=job
         self.level = 1 
         self.exp = 0 
-        
-        items = {} # Dictionary which uses item name as reference, value is the amount held
+
+        self.items = {} # Dictionary which uses item name as reference, value is the amount held
+
+        self.items["Potion"] = 3
+        self.items["Elixir"] = 1
+        self.inventory.append("Potion")
+        self.inventory.append("Elixir")
 
         match job:
             case _ if job == WARRIOR: # Default stat definitions
@@ -96,8 +101,8 @@ class Player(Actor):
                 self.magic = 1
 
                 self.weapon = "Iron Sword"
-                self.armor = "Chestplate"
-                self.accessory = "Armband"
+                self.armor = "Iron Chestplate"
+                self.accessory = "Armband" # this is actually unused atm
             case _ if job == MAGE:
                 self.movementRange = 12
                 self.maxHealth = 20
@@ -111,9 +116,9 @@ class Player(Actor):
                 self.speed = 2 # default 3
                 self.magic = 10
 
-                self.weapon = "Staff"
-                self.armor = "Shirt"
-                self.accessory = "Necklace"
+                self.weapon = "Wooden Staff"
+                self.armor = "Apprentice Robe"
+                self.accessory = "Necklace" # all of the accessories are unused basically
 
                 self.magicAttacks.append(fireMagic)
             case _ if job == ROGUE:
@@ -129,8 +134,8 @@ class Player(Actor):
                 self.speed = 10
                 self.magic = 1
 
-                self.weapon = "Knife"
-                self.armor = "Shirt"
+                self.weapon = "Iron Dagger"
+                self.armor = "Cloth Shirt"
                 # self.accessory = "" # No default accessory
             case _:
                 print("invalid job lol")

@@ -38,8 +38,8 @@ def enemyAttack(attacker, defender):
     defender.health -= damage
     return int(damage)
 
-def fireMagic(attacker, defender, manaUsed):
-    damage = attacker.magic + weaponDict[attacker.weapon].magicAttack - defender.magicDefense + (manaUsed * 2)
+def fireMagic(attacker, defender):
+    damage = attacker.magic + weaponDict[attacker.weapon].magicAttack - defender.magicDefense
     
     if defender.weakness == FIRE:
         damage *= 2
