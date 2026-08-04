@@ -83,7 +83,7 @@ class Player(Actor):
 
         match job:
             case _ if job == WARRIOR: # Default stat definitions
-                self.movementRange = 3
+                self.movementRange = 12
                 self.maxHealth = 50
                 self.maxMana = 0
                 self.health = 50
@@ -99,7 +99,7 @@ class Player(Actor):
                 self.armor = "Chestplate"
                 self.accessory = "Armband"
             case _ if job == MAGE:
-                self.movementRange = 3
+                self.movementRange = 12
                 self.maxHealth = 20
                 self.maxMana = 20
                 self.health = 20
@@ -117,7 +117,7 @@ class Player(Actor):
 
                 self.magicAttacks.append(fireMagic)
             case _ if job == ROGUE:
-                self.movementRange = 3
+                self.movementRange = 12
                 self.maxHealth = 40
                 self.maxMana = 0
                 self.health = 40
