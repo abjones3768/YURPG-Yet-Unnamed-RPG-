@@ -112,6 +112,6 @@ def thunderMagic(attacker, defender):
     return int(damage)
 
 magicList = list()
-magicList.append(fireMagic)
-magicList.append(iceMagic)
-magicList.append(thunderMagic)
+magicList.append("Fire")
+magicList.append("Ice")
+magicList.append("Thunder")
