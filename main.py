@@ -479,15 +479,13 @@ while run:
                             print("Choose a direction to attack (U/D/L/R)")
                             attack = input()
                             attack.strip()
-                        x = actor_turn.x
-                        y = actor_turn.y
-                        if attack == 'U': y -= 2*TILE_SIZE #remove the 2* when pathfinding is fixed
-                        if attack == 'D': y += 2*TILE_SIZE
-                        if attack == 'L': x -= 2*TILE_SIZE
-                        if attack == 'R': x += 2*TILE_SIZE
+                        if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
+                        if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
+                        if attack == 'L': target_tile = actor_turn.cur_tile - 1
+                        if attack == 'R': target_tile = actor_turn.cur_tile + 1
                         target = None
                         for actor in battle_grid.actors:
-                            if actor.x == x and actor.y == y:
+                            if target_tile == actor.cur_tile:
                                 target = actor
                         if isinstance(target, Actor): # If attack is targeting a square with an actor
                             damage = playerAttack(actor_turn, target)                        
@@ -513,15 +511,13 @@ while run:
                             print("Choose a direction to attack (U/D/L/R)")
                             attack = input()
                             attack.strip()
-                        x = actor_turn.x
-                        y = actor_turn.y
-                        if attack == 'U': y -= 2*TILE_SIZE #remove the 2* when pathfinding is fixed
-                        if attack == 'D': y += 2*TILE_SIZE
-                        if attack == 'L': x -= 2*TILE_SIZE
-                        if attack == 'R': x += 2*TILE_SIZE
+                        if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
+                        if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
+                        if attack == 'L': target_tile = actor_turn.cur_tile - 1
+                        if attack == 'R': target_tile = actor_turn.cur_tile + 1
                         target = None
                         for actor in battle_grid.actors:
-                            if actor.x == x and actor.y == y:
+                            if target_tile == actor.cur_tile:
                                 target = actor
                         damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
                         print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
