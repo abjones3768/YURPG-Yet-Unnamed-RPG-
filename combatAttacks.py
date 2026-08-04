@@ -110,3 +110,8 @@ def thunderMagic(attacker, defender):
     damage = damage * mul
     defender.health -= damage
     return int(damage)
+
+magicList = list()
+magicList.append(fireMagic)
+magicList.append(iceMagic)
+magicList.append(thunderMagic)
