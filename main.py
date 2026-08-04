@@ -255,7 +255,7 @@ while run:
                                     aggro_enemies.clear()
                                     enemies_aggroed = False
                                     pygame.mixer.music.load(music[constants.COMBAT_THEME])
-                                    pygame.mixer.music.set_volume(0.5)
+                                    pygame.mixer.music.set_volume(0.4)
                                     pygame.mixer.music.play(-1)
                                     break
 
@@ -334,10 +334,9 @@ while run:
                         elif dy < mvmt_actor.y:
                             mvmt_actor.y -= speed
                         if mvmt_actor.x == dx and mvmt_actor.y == dy:
-                            # print(f"{mvmt_actor} move from [{mvmt_actor.cur_tile%dungeon_cols}][{mvmt_actor.cur_tile//dungeon_cols}] to [{next_tile%dungeon_cols}][{next_tile//dungeon_cols}]")
-                            mvmt_actor.prev_tile = mvmt_actor.cur_tile
-                            mvmt_actor.cur_tile = next_tile
                             if mvmt_actor is player:
+                                mvmt_actor.prev_tile = mvmt_actor.cur_tile
+                                mvmt_actor.cur_tile = next_tile
                                 if dungeon.tiles[next_tile] == constants.DOOR:
                                     if rend_mode == constants.TOP_DOWN:
                                         sounds[constants.OPEN_DOOR].play()
@@ -352,8 +351,13 @@ while run:
                                     has_moved = True
                                     move_step_count += 1
                             else:
-                                move_step_count += 1
-                                has_moved = True
+                                if next_tile != player.cur_tile:
+                                    mvmt_actor.prev_tile = mvmt_actor.cur_tile
+                                    mvmt_actor.cur_tile = next_tile
+                                    move_step_count += 1
+                                    has_moved = True
+                                else:
+                                    move_step_count = len(move_path)
                         move_start_time = pygame.time.get_ticks()
                 else:
                     game_state = prev_game_state
@@ -425,7 +429,7 @@ while run:
                     if dungeon.tiles[move_dest] == constants.FLOOR:
                         move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
                         if move_path and mvmt_actor.movementRange >= len(move_path)-1:
-                            #mvmt_actor = player
+                            mvmt_actor = player
                             move_step_count = 0
                             game_state = constants.MOVING_STATE
                             prev_game_state = constants.COMBAT_STATE
@@ -449,16 +453,21 @@ while run:
                 print(actor_turn)
                 print(turns)
                 if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
-                    move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
-                    print("should be moving")
-                    if move_path:
-                        print("found path")
-                        mvmt_actor = actor_turn
-                        move_step_count = 0
-                        game_state = constants.MOVING_STATE
-                        prev_game_state = constants.COMBAT_STATE
-                        move_start_time = pygame.time.get_ticks()
-                        turn_loop = True
+                    # If enemy is 1 tile away from player, attack. Else, move.
+                    dist = abs(actor_turn, player)
+                    if dist == 1 or dist == dungeon_cols:
+                        pass
+                    else:
+                        move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
+                        print("should be moving")
+                        if move_path:
+                            print("found path")
+                            mvmt_actor = actor_turn
+                            move_step_count = 0
+                            game_state = constants.MOVING_STATE
+                            prev_game_state = constants.COMBAT_STATE
+                            move_start_time = pygame.time.get_ticks()
+                            turn_loop = True
                 else:
                     action = 0
                     while action < 1 or action > 5:
