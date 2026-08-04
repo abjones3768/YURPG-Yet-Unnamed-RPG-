@@ -491,8 +491,9 @@ while run:
                             damage = playerAttack(actor_turn, target)                        
                             print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
                             if target.health < 1:
-                                print(f"{target.name} defeated!") 
-                                actor.gainExp(target.level)
+                                print(f"{target.name} defeated!")
+                                if actor_turn is player:
+                                    actor_turn.gainExp(target.level)
                                 battleTimer.pop(target)
                                 # remove target from grid somehow
                                 # removing them from battleTimer at least stops them from getting a turn so they are "dead"
