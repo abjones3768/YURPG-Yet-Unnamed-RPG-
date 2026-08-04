@@ -395,7 +395,9 @@ while run:
                         prev_game_state = constants.COMBAT_STATE
 
                     # FOR TESTING: press 't' key to cycle mvmt_actor through battle_grid actors
-                    # Can delete this when it is no longer needed
+                    # Can delete this when it is no longer needed.
+                    # To test enemy movement, just comment out 'mvmt_actor = player'
+                    # at line 421
                     elif e.key == pygame.K_t:
                         cur_combat_actor = cur_combat_actor + 1 if cur_combat_actor < len(battle_grid.actors)-1 else 0
                         mvmt_actor = battle_grid.actors[cur_combat_actor]
@@ -416,7 +418,7 @@ while run:
                     if dungeon.tiles[move_dest] == constants.FLOOR:
                         move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
                         if move_path and mvmt_actor.movementRange >= len(move_path)-1:
-                            mvmt_actor = player
+                            #mvmt_actor = player
                             move_step_count = 0
                             game_state = constants.MOVING_STATE
                             prev_game_state = constants.COMBAT_STATE
