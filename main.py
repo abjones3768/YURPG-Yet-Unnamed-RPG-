@@ -454,17 +454,25 @@ while run:
                     # If enemy is 1 tile away from player, attack. Else, move.
                     dist = abs(actor_turn.cur_tile - player.cur_tile)
                     if dist == 1 or dist == dungeon_cols:
-                        pass
+                        attack = random.choice(actor_turn.attackList)
+                        damage = attack(actor_turn, player)                        
+                        print(f"{actor_turn.name} dealt {damage} damage to {player.name}!")
+                        if player.health < 1:
+                            print(f"{player.name} defeated!") 
+                            battleTimer.pop(target)
+                            print("this is game over lol")
+                        turn_loop = True
                     else:
                         move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
-                        print("should be moving")
                         if move_path:
-                            print("found path")
                             mvmt_actor = actor_turn
                             move_step_count = 0
                             game_state = constants.MOVING_STATE
                             prev_game_state = constants.COMBAT_STATE
                             move_start_time = pygame.time.get_ticks()
+                        if dist == 1 or dist == dungeon_cols: # gobby is a little silly and only attacks or moves per turn
+                            pass                              # need to fix that later
+                        else:
                             turn_loop = True
                 else:
                     action = 0
