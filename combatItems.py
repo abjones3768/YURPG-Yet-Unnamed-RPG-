@@ -43,12 +43,14 @@ class Robe(Armor):
 class Item:
     name = 0
     power = 0
+    rarity = 0
     usageFunction = 0
     usageMessage = 0
 
 class Potion(Item):
     name = "Potion"
     power = 20
+    rarity = 1
     def usageFunction(self, actor):
         actor.health += self.power
         if actor.health > actor.maxHealth:
@@ -58,6 +60,7 @@ class Potion(Item):
 class LargePotion(Item):
     name = "Large Potion"
     power = 100
+    rarity = 2
     def usageFunction(self, actor):
         actor.health += self.power
         if actor.health > actor.maxHealth:
@@ -67,6 +70,7 @@ class LargePotion(Item):
 class Elixir(Item):
     name = "Elixir"
     power = 10
+    rarity = 2
     def usageFunction(self, actor):
         actor.mana += self.power
         if actor.mana > actor.maxMana:
@@ -76,6 +80,7 @@ class Elixir(Item):
 class LargeElixir(Item):
     name = "Large Elixir"
     power = 50
+    rarity = 3
     def usageFunction(self, actor):
         actor.mana += self.power
         if actor.mana > actor.maxMana:

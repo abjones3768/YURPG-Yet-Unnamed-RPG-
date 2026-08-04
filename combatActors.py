@@ -142,8 +142,10 @@ class Player(Actor):
         self.items = {} # Dictionary which uses item name as reference, value is the amount held
         self.items["Potion"] = 3
         self.items["Elixir"] = 1
-        self.inventory.append("Potion")
-        self.inventory.append("Elixir")
+        self.items["Large Potion"] = 0
+        self.items["Large Elixir"] = 0
+        self.inventory.append("Large Potion")
+        self.inventory.append("Large Elixir")
 
     def expNeeded(self):
         return 100 + (self.level * 50)
