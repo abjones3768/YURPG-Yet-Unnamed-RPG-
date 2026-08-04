@@ -9,6 +9,7 @@ from battle_grid import BattleGrid
 from shadowcaster import Shadowcaster
 from combatActors import *
 from combatLogic import *
+from combatDefines import *
 
 # This script launches the game.
 
@@ -450,8 +451,6 @@ while run:
                 if turns and turn_loop: # Retrieve first turn in list
                     actor_turn = turns.pop(0)
                     turn_loop = False
-                print(actor_turn)
-                print(turns)
                 if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
                     # If enemy is 1 tile away from player, attack. Else, move.
                     dist = abs(actor_turn, player)
@@ -483,7 +482,7 @@ while run:
                             attack.strip()
                         x = actor_turn.x
                         y = actor_turn.y
-                        if attack == 'U': y -= 2*TILE_SIZE
+                        if attack == 'U': y -= 2*TILE_SIZE #remove the 2* when pathfinding is fixed
                         if attack == 'D': y += 2*TILE_SIZE
                         if attack == 'L': x -= 2*TILE_SIZE
                         if attack == 'R': x += 2*TILE_SIZE
@@ -504,35 +503,49 @@ while run:
                             print("Miss!")
                     if action == MAGIC:
                         print("Magic: ")
-                        magicNum = len(actor.magicAttacks)
-                        for i in range(len(actor.magicAttacks)):
-                            print(f"{i + 1}. {actor.magicAttacks[i]}")
+                        magicNum = len(actor_turn.magicAttacks)
+                        for i in range(len(actor_turn.magicAttacks)):
+                            print(f"{i + 1}. {actor_turn.magicAttacks[i]}")
                         choice = int(input("Choose a spell."))
                         while choice > magicNum or choice < 1:
                             choice = int(input("Choose a spell."))
-                        manaChoice = int(input(f"How much mana do you want to spend? Max: {actor.mana}"))
-                        while manaChoice > actor.mana or manaChoice < 1:
-                            manaChoice = int(input(f"How much mana do you want to spend? Max: {actor.mana}"))
-    
-                        damage = actor.magicAttacks[choice - 1](actor, actor, manaChoice)
-                        print(f"{actor.name} dealt {damage} damage to {actor.name}!")
+                        attack = ""
+                        while attack not in {'U', 'D', 'L', 'R'}:
+                            print("Choose a direction to attack (U/D/L/R)")
+                            attack = input()
+                            attack.strip()
+                        x = actor_turn.x
+                        y = actor_turn.y
+                        if attack == 'U': y -= 2*TILE_SIZE #remove the 2* when pathfinding is fixed
+                        if attack == 'D': y += 2*TILE_SIZE
+                        if attack == 'L': x -= 2*TILE_SIZE
+                        if attack == 'R': x += 2*TILE_SIZE
+                        target = None
+                        for actor in battle_grid.actors:
+                            if actor.x == x and actor.y == y:
+                                target = actor
+                        damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
+                        print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
                         if actor.health < 1:
-                            TESTprintGrid(grid)
-                            print(f"{actor.name} defeated!")
-                            actorDict.pop(actor)
-                            battleTimer.pop(actor)
-                            actor = '-' 
-    
+                            print(f"{target.name} defeated!") 
+                            actor.gainExp(target.level)
+                            battleTimer.pop(target)
+                            # remove target from grid somehow
+                            # removing them from battleTimer at least stops them from getting a turn so they are "dead"
                     if action == ITEMS:
                         print("Items: ")
-                        itemNum = len(actor.inventory)
-                        for i in range(len(actor.inventory)):
-                            print(f"{i + 1}. {actor.inventory[i]}")
+                        itemNum = len(actor_turn.inventory)
+                        for i in range(itemNum):
+                            print(f"{i + 1}. {actor_turn.inventory[i]}. ", end="")
+                            if actor_turn.items[actor_turn.inventory[i]] == 0:
+                                print("None available.", end="")
+                            print("")
                         choice = int(input("Choose an item."))
-                        while choice > itemNum or choice < 1:
+                        while choice > itemNum or choice < 1 or actor_turn.items[actor_turn.inventory[choice - 1]] == 0:
                             choice = int(input("Choose an item."))
-                        itemDict[actor.inventory[choice - 1]].usageFunction(actor)
-                        print(f"{actor.name} used {itemDict[actor.inventory[choice - 1]].name}. {itemDict[actor.inventory[choice - 1]].usageMessage}")
+                        itemDict[actor_turn.inventory[choice - 1]].usageFunction(actor_turn)
+                        print(f"{actor_turn.name} used {itemDict[actor_turn.inventory[choice - 1]].name}. {itemDict[actor_turn.inventory[choice - 1]].usageMessage}")
+                        actor_turn.items[actor_turn.inventory[choice - 1]] -= 1
     
                     if action == WAIT:
                         pass
