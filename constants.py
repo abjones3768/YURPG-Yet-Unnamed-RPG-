@@ -50,6 +50,7 @@ GOBLIN_AGGRO = 9
 
 # Music track ids
 MENU_THEME = 0
+COMBAT_THEME = 1
 
 # Tile color map
 tile_colors = {

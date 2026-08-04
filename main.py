@@ -76,8 +76,10 @@ def load_audio():
         pygame.mixer.Sound("Resources/SFX/MAGIC.mp3"),
         pygame.mixer.Sound("Resources/SFX/GOBLIN_AGGRO.mp3")
     ]
+    sfx[constants.OPEN_DOOR].set_volume(0.5)
     music = [
-        "Resources/Music/MENU_THEME.wav"
+        "Resources/Music/MENU_THEME.wav",
+        "Resources/Music/COMBAT_THEME.wav"
     ]
     return sfx, music
 
@@ -117,6 +119,7 @@ menu_event = None
 menu_key = None
 
 pygame.mixer.music.load(music[constants.MENU_THEME])
+pygame.mixer.music.set_volume(0.5)
 menu = Menu(screen_width, screen_height, game_state, screen, sounds, pygame.mixer.music)
 main_background = Vortex(screen_width, screen_height, 600, screen)
 dungeon = None
@@ -248,6 +251,9 @@ while run:
                                     prev_game_state = constants.EXPLORATION_STATE
                                     aggro_enemies.clear()
                                     enemies_aggroed = False
+                                    pygame.mixer.music.load(music[constants.COMBAT_THEME])
+                                    pygame.mixer.music.set_volume(0.5)
+                                    pygame.mixer.music.play(-1)
                                     break
 
 
@@ -292,8 +298,7 @@ while run:
                     elif dest_tile_val == constants.CHEST:
                         dist = abs(player.cur_tile - move_dest)
                         if dist == 1 or dist == dungeon_cols:
-                            for item in dungeon.current_room.chests[move_dest]:
-                                player.inventory.append(item)
+                            player.inventory.append(dungeon.current_room.chests[move_dest])
                             sounds[constants.ITEM_FOUND].play()
                             dungeon.tiles[move_dest] = constants.FLOOR
                             del dungeon.current_room.chests[move_dest]
