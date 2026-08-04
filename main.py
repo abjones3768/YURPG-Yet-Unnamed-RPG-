@@ -118,6 +118,13 @@ mvmt_actor = None
 menu_event = None
 menu_key = None
 
+# Combat init and junk
+battleTimer = {}                                                        # Dict of integers that uses actor pointers as an index
+turn_loop = True                                                        # Tracks beginning of battle loop
+actor_turn = None                                                          # Pointer to current actor that has turn
+turns = None
+ended_moving = False
+
 pygame.mixer.music.load(music[constants.MENU_THEME])
 pygame.mixer.music.set_volume(0.5)
 menu = Menu(screen_width, screen_height, game_state, screen, sounds, pygame.mixer.music)
@@ -130,10 +137,6 @@ battle_grid = None
 aggro_enemies = []
 enemies_aggroed = False
 cur_combat_actor = 0
-
-# Combat init
-battleTimer = {} # Dict of integers that uses actor pointers as an index to their current value
-
 
 # Game loop
 run = True
@@ -431,18 +434,35 @@ while run:
             ##############################################
             # PUT COMBAT LOGIC FOR EACH FRAME BELOW HERE #
             ##############################################
-            
-            # allActors = list()
-            # allActors.append(player)
-            # for actor in battle_grid.enemies:
-            #    allActors.append(actor)
-            #turns = battleGetTurns(allActors, battleTimer) # gets list of actors that got a turn        
-            #for actor in turns:  # (this def shouldnt run every frame)
-            #    if isinstance(actor, Player): # player turn
-            #        mvmt_actor = actor
-            #    else: # enemy turn
-            #        mvmt_actor = actor
-
+            if game_state == constants.MOVING_STATE:
+                print("moving")
+                ended_moving = True
+            else:
+                if ended_moving:
+                    turn_loop = True
+                    ended_moving = False
+                if not turns and turn_loop: # Get list of turns
+                    turns = battleGetTurns(battle_grid.actors, battleTimer)
+                if turns and turn_loop: # Retrieve first turn in list
+                    actor_turn = turns.pop(0)
+                    turn_loop = False
+                print(actor_turn)
+                print(turns)
+                if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
+                    move_path = actor_turn.move(dungeon.player_tile, dungeon, game_state, battle_grid)
+                    print("should be moving")
+                    if move_path:
+                        print("found path")
+                        mvmt_actor = actor_turn
+                        move_step_count = 0
+                        game_state = constants.MOVING_STATE
+                        prev_game_state = constants.COMBAT_STATE
+                        move_start_time = pygame.time.get_ticks()
+                        turn_loop = True
+                else:
+                    input("player turn")
+                    turn_loop = True
+                
 
             # battle_grid is a subset of tiles out of the greater dungeon.
             # Each time combat is started, it updates its actor list to
