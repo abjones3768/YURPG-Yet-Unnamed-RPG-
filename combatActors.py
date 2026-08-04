@@ -92,7 +92,7 @@ class Player(Actor):
                 self.strength = 10
                 self.defense = 10
                 self.magicDefense = 5
-                self.speed = 3 # default 5
+                self.speed = 14
                 self.magic = 1
 
                 self.weapon = "Iron Sword"
@@ -108,7 +108,7 @@ class Player(Actor):
                 self.strength = 3
                 self.defense = 0
                 self.magicDefense = 10
-                self.speed = 2 # default 3
+                self.speed = 12
                 self.magic = 10
 
                 self.weapon = "Wooden Staff"
@@ -128,7 +128,7 @@ class Player(Actor):
                 self.strength = 6
                 self.defense = 6
                 self.magicDefense = 5
-                self.speed = 10
+                self.speed = 16
                 self.magic = 1
 
                 self.weapon = "Iron Dagger"
@@ -144,6 +144,8 @@ class Player(Actor):
         self.items["Elixir"] = 1
         self.items["Large Potion"] = 0
         self.items["Large Elixir"] = 0
+        self.inventory.append("Potion")
+        self.inventory.append("Elixir")
         self.inventory.append("Large Potion")
         self.inventory.append("Large Elixir")
 
@@ -167,20 +169,17 @@ class Player(Actor):
             self.maxHealth += 8
             self.strength += 3
             self.defense += 2
-            self.speed += 1
 
         elif self.job == MAGE:
             self.maxHealth += 3
             self.maxMana += 5
             self.magic += 3
             self.magicDefense += 2
-            self.speed += 2
 
         elif self.job == ROGUE:
             self.maxHealth += 5
             self.strength += 2
             self.defense += 1
-            self.speed += 3
 
         self.health = self.maxHealth
         self.mana = self.maxMana
@@ -194,7 +193,7 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
     maxHealth = 10
 
     strength = 2
-    speed = 1
+    speed = 8
 
     weakness = FIRE
 
@@ -215,7 +214,7 @@ class SuperGoblin(Actor):
     maxHealth = 30
 
     strength = 8
-    speed = 3
+    speed = 12
 
     level = 2
 
@@ -236,7 +235,7 @@ class MagicGoblin(Actor):
     magic = 8
 
     strength = 1
-    speed = 2
+    speed = 10
 
     level = 3
 
