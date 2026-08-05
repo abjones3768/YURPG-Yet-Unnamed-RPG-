@@ -460,7 +460,7 @@ while run:
                         print(f"{actor_turn.name} dealt {damage} damage to {player.name}!")
                         if player.health < 1:
                             print(f"{player.name} defeated!") 
-                            battleTimer.pop(target)
+                            battleTimer.pop(player)
                             print("this is game over lol")
                         turn_loop = True
                     else:
