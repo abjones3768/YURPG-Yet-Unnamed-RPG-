@@ -471,14 +471,15 @@ while run:
                             turn_loop = True
                     if action == ATTACK:
                         attack = ""
-                        while attack not in {'U', 'D', 'L', 'R'}:
-                            print("Choose a direction to attack (U/D/L/R)")
+                        while attack not in {'U', 'D', 'L', 'R', 'N'}:
+                            print("Choose a direction to attack (U/D/L/R/N)")
                             attack = input()
                             attack.strip()
                         if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
                         if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
                         if attack == 'L': target_tile = actor_turn.cur_tile - 1
                         if attack == 'R': target_tile = actor_turn.cur_tile + 1
+                        if attack == 'N': target_tile = actor_turn.cur_tile
                         target = None
                         for actor in battle_grid.actors:
                             if target_tile == actor.cur_tile:
@@ -507,14 +508,15 @@ while run:
                         while choice > magicNum or choice < 1:
                             choice = int(input("Choose a spell."))
                         attack = ""
-                        while attack not in {'U', 'D', 'L', 'R'}:
-                            print("Choose a direction to attack (U/D/L/R)")
+                        while attack not in {'U', 'D', 'L', 'R', 'N'}:
+                            print("Choose a direction to attack (U/D/L/R/N)")
                             attack = input()
                             attack.strip()
                         if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
                         if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
                         if attack == 'L': target_tile = actor_turn.cur_tile - 1
                         if attack == 'R': target_tile = actor_turn.cur_tile + 1
+                        if attack == 'N': target_tile = actor_turn.cur_tile
                         target = None
                         for actor in battle_grid.actors:
                             if target_tile == actor.cur_tile:
@@ -522,11 +524,11 @@ while run:
                         sounds[constants.MAGIC].play()
                         damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
                         print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
-                        if actor.health < 1:
+                        if target.health < 1:
                             has_moved = True
                             sounds[constants.GOBLIN_AGGRO].play()
                             print(f"{target.name} defeated!") 
-                            actor.gainExp(target.level)
+                            actor_turn.gainExp(target.level)
                             battleTimer.pop(target)
                             battle_grid.actors.pop(battle_grid.actors.index(target))
                             dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE

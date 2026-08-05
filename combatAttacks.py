@@ -111,7 +111,21 @@ def thunderMagic(attacker, defender):
     defender.health -= damage
     return int(damage)
 
+def healingMagic(attacker, defender):
+    damage = -attacker.magic
+    
+    if isinstance(attacker, combatActors.Player):
+        damage -= weaponDict[attacker.weapon].magicAttack
+
+    randy = random.randint(-50, 50)
+    mul = float(randy)/100
+    mul += 1
+    damage = damage * mul
+    defender.health += damage
+    return int(damage)
+
 magicList = list()
 magicList.append("Fire")
 magicList.append("Ice")
 magicList.append("Thunder")
+magicList.append("Heal")
