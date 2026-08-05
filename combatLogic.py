@@ -46,7 +46,7 @@ def testEnvironment():
     while members > 4 or members < 1:
         members = int(input("How many party members? (1-4)"))
     for i in range(members):
-        partyList.append(characterInit())
+        partyList.append(TESTcharacterInit())
     enemy = Goblin()
     enemy2 = Goblin()
     actors = []
