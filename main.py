@@ -218,8 +218,9 @@ while run:
                                         dungeon.tiles[enemy.prev_tile] = constants.FLOOR
                                         dungeon.tiles[enemy.cur_tile] = constants.ENEMY
                                         enemy.move_step += 1
-                                    elif enemy.move_step == len(enemy.path_to_player) - 11:
-                                        enemy.move_step += 1
+                                elif enemy.move_step == len(enemy.path_to_player) - 11:
+                                    enemy.path_to_player = enemy.move(player.cur_tile, dungeon, game_state, battle_grid)
+                                    enemy.move_step = 0
                             else:
                                 aggro_enemies.pop(aggro_enemies.index(enemy))
                                 if len(aggro_enemies) == 0:
@@ -230,7 +231,7 @@ while run:
                                     prev_game_state = constants.EXPLORATION_STATE
                                     enemies_aggroed = False
                                     pygame.mixer.music.load(music[constants.COMBAT_THEME])
-                                    pygame.mixer.music.set_volume(0.4)
+                                    pygame.mixer.music.set_volume(0.3)
                                     pygame.mixer.music.play(-1)
 
             # TOP-DOWN CONTROLS

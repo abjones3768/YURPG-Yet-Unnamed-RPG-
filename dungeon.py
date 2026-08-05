@@ -1,6 +1,6 @@
 import random
 import constants
-from combatActors import Player, Goblin
+from combatActors import *
 from combatItems import *
 
 # Dungeon room templates
@@ -235,6 +235,10 @@ class Dungeon:
         self.subdivide_subdungeons()
         self.set_corridor_tiles()
         self.placePlayer()
+        # sort by distance to starting room: dx^2+dy^2=dist
+        self.rooms.sort(key=lambda room: (
+            (((room.x1+room.x2)//2 - (self.player_tile%self.map_width)) ** 2) + (((room.y1 + room.y2)//2 - (self.player_tile//self.map_width)) ** 2)
+        ))
         self.fill_rooms()
         return self.tiles
 
@@ -338,7 +342,21 @@ class Dungeon:
                     place_col = random.randint(room.x1 + 2, room.x2 - 2)
                     place_row = random.randint(room.y1 + 2, room.y2 - 2)
                     place_tile = place_row * self.map_width + place_col
-                enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                if self.rooms.index(room) <= 16:
+                    enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                elif self.rooms.index(room) <= 32:
+                    if random.random() > 0.5:
+                        enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                    else:
+                        enemy = SuperGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                else:
+                    gob_type = random.randint(0, 2)
+                    if gob_type == 0:
+                        enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                    elif gob_type == 1:
+                        enemy = SuperGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                    else:
+                        enemy = MagicGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
                 self.equip_enemy(enemy)
                 self.enemies[place_tile] = enemy
                 self.tiles[place_tile] = constants.ENEMY
@@ -360,48 +378,31 @@ class Dungeon:
                 placed_chests += 1
 
     def equip_enemy(self, enemy):
-        job = random.randint(0, 2)
         weap_chance = random.random()
         armor_chance = random.random()
-        if weap_chance > 0.4:
-            if job == 0:
+        if isinstance(enemy, Goblin) or isinstance(enemy, SuperGoblin):
+            if weap_chance > 0.4:
                 enemy.inventory.append(weaponDict["Iron Sword"])
-            elif job == 1:
-                enemy.inventory.append(weaponDict["Iron Dagger"])
-            else:
-                enemy.inventory.append(weaponDict["Wooden Staff"])
-        elif weap_chance > 0.1:
-            if job == 0:
+            elif weap_chance > 0.1:
                 enemy.inventory.append(weaponDict["Steel Sword"])
-            elif job == 1:
-                enemy.inventory.append(weaponDict["Steel Dagger"])
             else:
-                enemy.inventory.append(weaponDict["Ebony Staff"])
-        else:
-            if job == 0:
                 enemy.inventory.append(weaponDict["Mythril Sword"])
-            elif job == 1:
-                enemy.inventory.append(weaponDict["Mythril Dagger"])
-            else:
-                enemy.inventory.append(weaponDict["Staff of Wisdom"])
-        if armor_chance > 0.4:
-            if job == 0:
+            if armor_chance > 0.4:
                 enemy.inventory.append(armorDict["Iron Chestplate"])
-            elif job == 1:
+            elif armor_chance > 0.1:
                 enemy.inventory.append(armorDict["Steel Chestplate"])
             else:
                 enemy.inventory.append(armorDict["Mythril Chestplate"])
-        elif armor_chance > 0.1:
-            if job == 0:
-                enemy.inventory.append(armorDict["Cloth Shirt"])
-            elif job == 1:
-                enemy.inventory.append(armorDict["Leather Cuirass"])
+        elif isinstance(enemy, MagicGoblin):
+            if weap_chance > 0.4:
+                enemy.inventory.append(weaponDict["Wooden Staff"])
+            elif weap_chance > 0.4:
+                enemy.inventory.append(weaponDict["Ebony Staff"])
             else:
-                enemy.inventory.append(armorDict["Studded Leather Cuirass"])
-        else:
-            if job == 0:
+                enemy.inventory.append(weaponDict["Staff of Wisdom"])
+            if armor_chance > 0.4:
                 enemy.inventory.append(armorDict["Apprentice Robe"])
-            elif job == 1:
+            elif armor_chance > 0.1:
                 enemy.inventory.append(armorDict["Journeyman Robe"])
             else:
                 enemy.inventory.append(armorDict["Master Robe"])
