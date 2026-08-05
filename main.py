@@ -534,9 +534,16 @@ while run:
                                     print("None available.", end="")
                                 print("")
                             choice = int(input("Choose an item. (0 to exit menu)"))
-                            while choice > itemNum or choice < 0 or actor_turn.items[actor_turn.inventory[choice - 1]] == 0:
-                                choice = int(input("Choose an item. (0 to exit menu)"))
-                            if not choice == 0:
+                            exitItems = False
+                            if choice == 0:
+                                exitItems = True
+                            if exitItems == False:
+                                while choice > itemNum or choice < 0 or actor_turn.items[actor_turn.inventory[choice - 1]] == 0:
+                                    choice = int(input("Choose an item. (0 to exit menu)"))
+                                    if choice == 0:
+                                        exitItems = True
+                                        choice = 1
+                            if not exitItems:
                                 itemDict[actor_turn.inventory[choice - 1]].usageFunction(actor_turn)
                                 print(f"{actor_turn.name} used {itemDict[actor_turn.inventory[choice - 1]].name}. {itemDict[actor_turn.inventory[choice - 1]].usageMessage}")
                                 actor_turn.items[actor_turn.inventory[choice - 1]] -= 1
