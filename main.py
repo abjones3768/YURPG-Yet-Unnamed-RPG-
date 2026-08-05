@@ -195,28 +195,31 @@ while run:
                     enemy_move_start = pygame.time.get_ticks()
                     battle_grid.actors.extend(aggro_enemies)
                 else:
-                    if pygame.time.get_ticks() - enemy_move_start > 5:
+                    if pygame.time.get_ticks() - enemy_move_start > 200:
                         for enemy in aggro_enemies:
                             if enemy.move_step < len(enemy.path_to_player) - 10:
                                 next_tile = enemy.path_to_player[enemy.move_step]
-                                dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
-                                dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
-                                if dx > enemy.x:
-                                    enemy.x += speed
-                                elif dx < enemy.x:
-                                    enemy.x -= speed
-                                elif dy > enemy.y:
-                                    enemy.y += speed
-                                elif dy < enemy.y:
-                                    enemy.y -= speed
-                                if enemy.x == dx and enemy.y == dy:
-                                    del dungeon.enemies[enemy.cur_tile]
-                                    enemy.prev_tile = enemy.cur_tile
-                                    enemy.cur_tile = next_tile
-                                    dungeon.enemies[enemy.cur_tile] = enemy
-                                    dungeon.tiles[enemy.prev_tile] = constants.FLOOR
-                                    dungeon.tiles[enemy.cur_tile] = constants.ENEMY
-                                    enemy.move_step += 1
+                                if enemy.move_step == 0 or dungeon.tiles[next_tile] != constants.ENEMY:
+                                    dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
+                                    dy = (next_tile//dungeon_cols)*constants.TILE_SIZE
+                                    if dx > enemy.x:
+                                        enemy.x += speed
+                                    elif dx < enemy.x:
+                                        enemy.x -= speed
+                                    elif dy > enemy.y:
+                                        enemy.y += speed
+                                    elif dy < enemy.y:
+                                        enemy.y -= speed
+                                    if enemy.x == dx and enemy.y == dy:
+                                        enemy.prev_tile = enemy.cur_tile
+                                        enemy.cur_tile = next_tile
+                                        del dungeon.enemies[enemy.prev_tile]
+                                        dungeon.enemies[enemy.cur_tile] = enemy
+                                        dungeon.tiles[enemy.prev_tile] = constants.FLOOR
+                                        dungeon.tiles[enemy.cur_tile] = constants.ENEMY
+                                        enemy.move_step += 1
+                                    elif enemy.move_step == len(enemy.path_to_player) - 11:
+                                        enemy.move_step += 1
                             else:
                                 aggro_enemies.pop(aggro_enemies.index(enemy))
                                 if len(aggro_enemies) == 0:
@@ -471,6 +474,7 @@ while run:
                             if target.health < 1:
                                 print(f"{target.name} defeated!")
                                 sounds[constants.GOBLIN_AGGRO].play()
+                                has_moved = True
                                 if actor_turn is player:
                                     actor_turn.gainExp(target.level)
                                 battleTimer.pop(target)
@@ -503,6 +507,7 @@ while run:
                         damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
                         print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
                         if actor.health < 1:
+                            has_moved = True
                             sounds[constants.GOBLIN_AGGRO].play()
                             print(f"{target.name} defeated!") 
                             actor.gainExp(target.level)
