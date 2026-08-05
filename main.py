@@ -15,37 +15,11 @@ from combatDefines import *
 
 """
 TODO:
-- Make hovering over battle grid tile color it with partially transparent red cube
 - Make hovering over battle grid obstacles call recursive function that makes all tiles
   in the obstacle partially transparent (same if an actor is blocked by one)
-- Make function to spawn chests and loot in chests by level/rarity,
-  including keys
-- Implement portal room with 4 keyhole tiles that, when unlocked,
-  activate a portal in center of room that renders vortex animation
-- Go through portal to get to the next dungeon
-- Make isometric battle grid interactive
 - Implement saving/loading game
-- Finish state logic
-- Integrate with menus and combat system
-- To implement save/load, create a dict containing every object that
-  needs to be serialized and use pickle module to save/load to file
-- Add remaining sfx
-- Modify rects/cube faces to use sprite art
+- Integrate with menus
 """
-
-#################################################
-# CONTROLS (temporary until menus are added in) #
-#################################################
-#                                               #
-# M to toggle between top down and isometric    #
-# Click on floor/door tiles to move to them     #
-# Q to quit                                     #
-#################################################
-
-
-# Move this to actor class
-# Accepts clicked tile as input and outputs path to it
-# import dungeon and renderer in combatActors
 
 # Load sprites used for isometric rendering and scale them up to 32x32
 # Use sprite.image for drawing and sprite.rect for collision detection in isometric mode
@@ -412,12 +386,15 @@ while run:
                             prev_game_state = constants.COMBAT_STATE
                             move_start_time = pygame.time.get_ticks()
                         else:
+                            ended_moving = False
+                            turn_loop = False
                             sounds[constants.ILLEGAL_MOVE].play()
                             
             # TURN-BASED COMBAT LOGIC
             if game_state == constants.MOVING_STATE:
                 print("moving")
                 ended_moving = True
+                turn_loop = True
             else:
                 if ended_moving:
                     turn_loop = True
@@ -547,7 +524,7 @@ while run:
     
                     if action == WAIT:
                         pass
-                    turn_loop = True
+                    #turn_loop = True
                 if len(battle_grid.actors) == 1 and battle_grid.actors[0] is player:
                     battleTimer.clear()
                     battle_grid.actors.clear()
@@ -558,7 +535,7 @@ while run:
                     rend_mode = constants.TOP_DOWN
                     sounds[constants.VICTORY].play()
                     pygame.mixer.music.stop()
-                    shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
+                    #shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
                 elif game_over:
                     if pygame.time.get_ticks() - game_over_start > 3000:
                         game_state = MENU_STATE

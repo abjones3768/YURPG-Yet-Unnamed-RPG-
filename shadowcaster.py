@@ -6,7 +6,7 @@ class Shadowcaster:
         # Stores each tile's visibility status
         self.tile_visibility = [0] * (width * height)
         self.width = width
-        self.radius = 30
+        self.radius = 24
         
         # Multiplication matrix used to compute x,y offsets in each octant
         # around the player
