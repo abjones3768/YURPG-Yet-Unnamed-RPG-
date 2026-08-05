@@ -354,32 +354,33 @@ class Dungeon:
                 chest_count = random.randint(1, room_level)
 
             # Place any enemies in random floor tiles
-            placed_enemies = 0
-            while placed_enemies < enemy_count:
-                place_tile = constants.SHADOW
-                while self.tiles[place_tile] != constants.FLOOR:
-                    place_col = random.randint(room.x1 + 2, room.x2 - 2)
-                    place_row = random.randint(room.y1 + 2, room.y2 - 2)
-                    place_tile = place_row * self.map_width + place_col
-                if self.rooms.index(room) <= 16:
-                    enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                elif self.rooms.index(room) <= 32:
-                    if random.random() > 0.5:
+            if room is not self.start_room:
+                placed_enemies = 0
+                while placed_enemies < enemy_count:
+                    place_tile = constants.SHADOW
+                    while self.tiles[place_tile] != constants.FLOOR:
+                        place_col = random.randint(room.x1 + 2, room.x2 - 2)
+                        place_row = random.randint(room.y1 + 2, room.y2 - 2)
+                        place_tile = place_row * self.map_width + place_col
+                    if self.rooms.index(room) <= 16:
                         enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                    elif self.rooms.index(room) <= 32:
+                        if random.random() > 0.5:
+                            enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                        else:
+                            enemy = SuperGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
                     else:
-                        enemy = SuperGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                else:
-                    gob_type = random.randint(0, 2)
-                    if gob_type == 0:
-                        enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                    elif gob_type == 1:
-                        enemy = SuperGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                    else:
-                        enemy = MagicGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
-                self.equip_enemy(enemy)
-                self.enemies[place_tile] = enemy
-                self.tiles[place_tile] = constants.ENEMY
-                placed_enemies += 1
+                        gob_type = random.randint(0, 2)
+                        if gob_type == 0:
+                            enemy = Goblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                        elif gob_type == 1:
+                            enemy = SuperGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                        else:
+                            enemy = MagicGoblin(place_col*constants.TILE_SIZE, place_row*constants.TILE_SIZE, place_tile)
+                    self.equip_enemy(enemy)
+                    self.enemies[place_tile] = enemy
+                    self.tiles[place_tile] = constants.ENEMY
+                    placed_enemies += 1
 
             placed_chests = 0
             while placed_chests < chest_count:
