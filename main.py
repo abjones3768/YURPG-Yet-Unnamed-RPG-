@@ -479,7 +479,7 @@ while run:
                     while action < 1 or action > 5:
                         action = int(input(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
                     if action == MOVE:
-                        input("player move (hit enter)")
+                        input("player move (hit enter after clicking)")
                         turn_loop = True
                     if action == ATTACK:
                         attack = ""
