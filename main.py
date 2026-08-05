@@ -93,7 +93,7 @@ prev_game_state = None
 info = pygame.display.Info()
 screen_width = info.current_w                                           # get user screen width
 screen_height = info.current_h                                          # get user screen height
-screen = pygame.display.set_mode((screen_width, screen_height))         # main graphics surface
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.SRCALPHA)         # main graphics surface
 viewport_cols = screen_width // constants.TILE_SIZE                     # screen width in tile space
 viewport_rows = screen_height // constants.TILE_SIZE                    # screen height in tile space
 dungeon_cols = viewport_cols * 10                                       # dungeon width in tile space
@@ -102,10 +102,8 @@ clock = pygame.time.Clock()
 images = load_images()
 sounds, music = load_audio()
 rend_mode = constants.TOP_DOWN
-combat_check_timer = 0                                                  # Keeps time between enemy detection checks
 game_time = 0                                                           # Global game time
 move_start_time = 0                                                     # Stores time when movement is started
-move_elapsed_time = 0                                                   # Tracks time between movements along path
 move_path_nodes = None                                                  # Used for pathfinding to build path
 move_path = None                                                        # List of tiles along path from A to B
 move_step_count = 0                                                     # Used to track movement along path
@@ -184,50 +182,21 @@ while run:
             prev_game_state = constants.MENU_STATE
 
     else:
-        # x,y offsets used for smooth movement of player/camera between tiles
-        vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
-    
-        # Tells renderer to run shadowcaster if player moves in top down mode,
-        # or to update the battle grid after actor movement if in combat
-        if has_moved:
-            has_moved = False
-
-        # Triggers initial battle grid projection in renderer
-        if start_combat:
-            start_combat = False
-
-
         #############################################################
                             # EXPLORATION STATE #
         #############################################################
         if game_state == constants.EXPLORATION_STATE:
 
-        ##############################################################
-        # COMMENT OUT THE CODE BELOW THIS IF YOU WANT TO BE ABLE TO
-        # TOGGLE BETWEEN RENDERING MODES WITH 'M' KEY.
-        #
-        # UNCOMMENT THE CODE BELOW TO MAKE IT WHERE IT ENTERS COMBAT
-        # WHEN YOU GET CLOSE ENOUGH TO AN ENEMY.
-        #
-        # WHEN AT LEAST 1 ENEMY IS DETECTED IN RANGE, IT WILL ENTER
-        # COMBAT STATE - SEE BELOW.
-        ##############################################################
-
             # Condense this and combine code common with MOVING_STATE into function
             if len(aggro_enemies) > 0:
-                battle_grid.actors.extend(aggro_enemies)
-                battle_grid.actors.append(player)
-                enemies_ready = 0
                 if not enemies_aggroed:
                     sounds[constants.GOBLIN_AGGRO].play()
                     enemies_aggroed = True
                     enemy_move_start = pygame.time.get_ticks()
+                    battle_grid.actors.extend(aggro_enemies)
                 else:
                     if pygame.time.get_ticks() - enemy_move_start > 5:
                         for enemy in aggro_enemies:
-                            next_tile = enemy.path_to_player[enemy.move_step]
-                            x_dist = abs(player.x - enemy.x)
-                            y_dist = abs(player.y - enemy.y)
                             if enemy.move_step < len(enemy.path_to_player) - 10:
                                 next_tile = enemy.path_to_player[enemy.move_step]
                                 dx = (next_tile%dungeon_cols)*constants.TILE_SIZE
@@ -241,25 +210,25 @@ while run:
                                 elif dy < enemy.y:
                                     enemy.y -= speed
                                 if enemy.x == dx and enemy.y == dy:
-                                    dungeon.tiles[enemy.prev_tile] = constants.FLOOR
-                                    dungeon.tiles[enemy.cur_tile] = constants.ENEMY
+                                    del dungeon.enemies[enemy.cur_tile]
                                     enemy.prev_tile = enemy.cur_tile
                                     enemy.cur_tile = next_tile
+                                    dungeon.enemies[enemy.cur_tile] = enemy
+                                    dungeon.tiles[enemy.prev_tile] = constants.FLOOR
+                                    dungeon.tiles[enemy.cur_tile] = constants.ENEMY
                                     enemy.move_step += 1
                             else:
-                                enemies_ready += 1
-                                if enemies_ready == len(aggro_enemies):
+                                aggro_enemies.pop(aggro_enemies.index(enemy))
+                                if len(aggro_enemies) == 0:
+                                    battle_grid.actors.append(player)
                                     rend_mode = constants.ISOMETRIC
                                     start_combat = True
                                     game_state = constants.COMBAT_STATE
                                     prev_game_state = constants.EXPLORATION_STATE
-                                    aggro_enemies.clear()
                                     enemies_aggroed = False
                                     pygame.mixer.music.load(music[constants.COMBAT_THEME])
                                     pygame.mixer.music.set_volume(0.4)
                                     pygame.mixer.music.play(-1)
-                                    break
-
 
             # TOP-DOWN CONTROLS
             for e in pygame.event.get():
@@ -306,6 +275,18 @@ while run:
                             sounds[constants.ITEM_FOUND].play()
                             dungeon.tiles[move_dest] = constants.FLOOR
                             del dungeon.current_room.chests[move_dest]
+                    elif dest_tile_val == constants.ENEMY_CORPSE:
+                        dist = abs(player.cur_tile - move_dest)
+                        if dist == 1 or dist == dungeon_cols:
+                            if random.random() > 0.5:
+                                sounds[constants.ITEM_FOUND].play()
+                                enemy = dungeon.enemies[move_dest]
+                                for item in enemy.inventory:
+                                    player.inventory.append(item)
+                            else:
+                                sounds[constants.ILLEGAL_MOVE].play()
+                            del dungeon.enemies[move_dest]
+                            dungeon.tiles[move_dest] = constants.FLOOR
 
         ########################################################
                             # MOVING STATE #
@@ -352,19 +333,19 @@ while run:
                                     has_moved = True
                                     move_step_count += 1
                             else:
-                                if next_tile != player.cur_tile:
-                                    mvmt_actor.prev_tile = mvmt_actor.cur_tile
-                                    mvmt_actor.cur_tile = next_tile
-                                    move_step_count += 1
-                                    has_moved = True
-                                else:
-                                    move_step_count = len(move_path)
+                                del dungeon.enemies[mvmt_actor.cur_tile]
+                                mvmt_actor.prev_tile = mvmt_actor.cur_tile
+                                mvmt_actor.cur_tile = next_tile
+                                dungeon.enemies[mvmt_actor.cur_tile] = mvmt_actor
+                                move_step_count += 1
+                                has_moved = True
+                                dungeon.tiles[mvmt_actor.prev_tile] = constants.FLOOR
+                                dungeon.tiles[mvmt_actor.cur_tile] = constants.ENEMY
                         move_start_time = pygame.time.get_ticks()
                 else:
                     game_state = prev_game_state
                     prev_game_state = constants.MOVING_STATE
                     if mvmt_actor is player:
-                        #shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
                         if changed_rooms:
                             changed_rooms = False
                             if dungeon.in_room:
@@ -376,11 +357,6 @@ while run:
         ########################################################
                             # COMBAT STATE #
         ########################################################
-
-        # COMBAT WILL ALTERNATE BETWEEN COMBAT STATE AND MENU STATE.
-        # YOU SELECT A MENU OPTION ON YOUR TURN AND THEN IT WILL PERFORM THE ACTION
-        # IF YOU SELECT TO MOVE ON YOUR TURN, IT WILL LET YOU CHOOSE A TILE TO MOVE TO
-        # AND THEN IT WILL SWITCH TO MOVE STATE TO MOVE YOU, THEN RETURN HERE.
         
         elif game_state == constants.COMBAT_STATE:
 
@@ -406,20 +382,7 @@ while run:
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.COMBAT_STATE
 
-                    # FOR TESTING: press 't' key to cycle mvmt_actor through battle_grid actors
-                    # Can delete this when it is no longer needed.
-                    # To test enemy movement, just comment out 'mvmt_actor = player'
-                    # at line 421
-                    elif e.key == pygame.K_t:
-                        cur_combat_actor = cur_combat_actor + 1 if cur_combat_actor < len(battle_grid.actors)-1 else 0
-                        mvmt_actor = battle_grid.actors[cur_combat_actor]
-
-                # MOUSE CLICK INPUT HANDLING
-                # RIGHT NOW THIS IS JUST FOR MOVEMENT
-                # NEED TO MODIFY TO PROCESS MENU CLICK INPUT IF MENU BUTTON IS CLICKED
-                # OR MOVEMENT IF A GRID TILE IS CLICKED
-                # IDEA: YOU HAVE TO CLICK 'MOVE' BUTTON ON TURN AND THEN IT LETS YOU
-                # CLICK ON A TILE TO MOVE TO
+                # COMBAT INPUT HANDLING
                 if e.type == pygame.MOUSEBUTTONDOWN:
                     click_pos = (int(e.pos[0]), int(e.pos[1]))
                     dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)
@@ -427,17 +390,18 @@ while run:
                     has_moved = True
 
                     if dungeon.tiles[move_dest] == constants.FLOOR:
+                        mvmt_actor = player
                         move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
                         if move_path and mvmt_actor.movementRange >= len(move_path)-1:
-                            mvmt_actor = player
                             move_step_count = 0
                             game_state = constants.MOVING_STATE
                             prev_game_state = constants.COMBAT_STATE
                             move_start_time = pygame.time.get_ticks()
+                        else:
+                            sounds[constants.ILLEGAL_MOVE].play()
+                            
             
-            ##############################################
-            # PUT COMBAT LOGIC FOR EACH FRAME BELOW HERE #
-            ##############################################
+            # TURN-BASED COMBAT LOGIC
             if game_state == constants.MOVING_STATE:
                 print("moving")
                 ended_moving = True
@@ -458,13 +422,14 @@ while run:
                         damage = attack(actor_turn, player)                        
                         print(f"{actor_turn.name} dealt {damage} damage to {player.name}!")
                         if player.health < 1:
-                            print(f"{player.name} defeated!") 
+                            print(f"{player.name} defeated!")
                             battleTimer.pop(target)
                             print("this is game over lol")
                         turn_loop = True
                     else:
                         move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
                         if move_path:
+                            move_path.pop(-1)
                             mvmt_actor = actor_turn
                             move_step_count = 0
                             game_state = constants.MOVING_STATE
@@ -496,15 +461,17 @@ while run:
                             if target_tile == actor.cur_tile:
                                 target = actor
                         if isinstance(target, Actor): # If attack is targeting a square with an actor
-                            damage = playerAttack(actor_turn, target)                        
+                            damage = playerAttack(actor_turn, target)
+                            sounds[constants.MELEE_ATTACK].play()                        
                             print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
                             if target.health < 1:
                                 print(f"{target.name} defeated!")
+                                sounds[constants.GOBLIN_AGGRO].play()
                                 if actor_turn is player:
                                     actor_turn.gainExp(target.level)
                                 battleTimer.pop(target)
-                                # remove target from grid somehow
-                                # removing them from battleTimer at least stops them from getting a turn so they are "dead"
+                                battle_grid.actors.pop(battle_grid.actors.index(target))
+                                dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
                         else:
                             print("Miss!")
                     if action == MAGIC:
@@ -528,14 +495,16 @@ while run:
                         for actor in battle_grid.actors:
                             if target_tile == actor.cur_tile:
                                 target = actor
+                        sounds[constants.MAGIC].play()
                         damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
                         print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
                         if actor.health < 1:
+                            sounds[constants.GOBLIN_AGGRO].play()
                             print(f"{target.name} defeated!") 
                             actor.gainExp(target.level)
                             battleTimer.pop(target)
-                            # remove target from grid somehow
-                            # removing them from battleTimer at least stops them from getting a turn so they are "dead"
+                            battle_grid.actors.pop(battle_grid.actors.index(target))
+                            dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
                     if action == ITEMS:
                         print("Items: ")
                         itemNum = len(actor_turn.inventory)
@@ -554,52 +523,29 @@ while run:
                     if action == WAIT:
                         pass
                     turn_loop = True
-                
+                if len(battle_grid.actors) == 1 and battle_grid.actors[0] is player:
+                    battleTimer.clear()
+                    battle_grid.actors.clear()
+                    game_state = constants.EXPLORATION_STATE
+                    prev_game_state = constants.COMBAT_STATE
+                    turns = False
+                    turn_loop = False
+                    rend_mode = constants.TOP_DOWN
+                    sounds[constants.VICTORY].play()
+                    pygame.mixer.music.stop()
+                    shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
 
-            # battle_grid is a subset of tiles out of the greater dungeon.
-            # Each time combat is started, it updates its actor list to
-            # store all enemies currently in combat so they are easily accessible.
-            #
-            #       - access combat actors:   battle_grid.actors
-            #
-            # I also updated the Actor base class so that for any actor you can easily
-            # get their position, tile_type and tile index in the dungeon.
-            #
-            #
-            # MOVEMENT:
-            #
-            # Player movement is handled above in MOVEMENT state when a valid floor tile is clicked.
-            #
-            # For enemy's to follow the path to their target after calling their move function,
-            # here is what we need to do:
-            #
-            #       - Since they are going to move towards the player until within attack range,
-            #         call their move function with the player's tile as the destination.
-            #         To access the current player tile:  dungeon.player_tile
-            #
-            #       - When an enemy chooses to move on their turn, call their move function:
-            #               move_path = move(dungeon.player_tile, dungeon, game_state, battle_grid) and then
-            #         
-            #       - Then do this, same as for the player to initiate MOVEMENT state and start the timer:
-            #            if move_path:
-            #                mvmt_actor = actor
-            #                move_step_count = 0
-            #                game_state = constants.MOVING_STATE
-            #                prev_game_state = constants.COMBAT_STATE
-            #                move_start_time = pygame.time.get_ticks()
-            #
-            #       - This will initiate MOVING_STATE and the enemy will just move however many
-            #         tiles their movementRange allows on the quickest path to the player. We will need
-            #         a check to determine their behavior that tells them to move if distance to player is
-            #         greater than constants.TILE_SIZE*2 (1 isometric tile), else attack.
-            #               
-            #       - There are 2 things we need to add:
-            #
-            #               1.  Currenly there is no visual cue for if you try to move to a tile
-            #                   outside your mvmt range, but I'll add that.
-            #
-            #               2.  I still need to implement a check for the player that doesn't let you click
-            #                   on a tile with an enemy in it or letting enemies take up the same tile.
+        # x,y offsets used for smooth movement of player/camera between tiles
+        vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
+    
+        # Tells renderer to run shadowcaster if player moves in top down mode,
+        # or to update the battle grid after actor movement if in combat
+        if has_moved:
+            has_moved = False
+
+        # Triggers initial battle grid projection in renderer
+        if start_combat:
+            start_combat = False
 
     pygame.display.flip()
     game_time = clock.tick(60)

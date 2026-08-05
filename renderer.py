@@ -90,7 +90,7 @@ class Renderer:
                     else:
                         color = constants.tile_colors[constants.SHADOW]
                     pygame.draw.rect(surface, color, pygame.Rect(x + self.x_offset, y + self.y_offset, tile_size, tile_size))
-            for enemy in aggro_enemies:
+            for enemy in battle_grid.actors:
                 en_x = enemy.x - (self.vp_pos[0] * tile_size)
                 en_y = enemy.y - (self.vp_pos[1] * tile_size)
                 pygame.draw.rect(surface, constants.tile_colors[constants.ENEMY], pygame.Rect(en_x + self.x_offset, en_y + self.y_offset, tile_size, tile_size))

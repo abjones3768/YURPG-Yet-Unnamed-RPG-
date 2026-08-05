@@ -309,6 +309,7 @@ class Dungeon:
 
     # Spawn distribution of enemies in each room based on size.
     def fill_rooms(self):
+        key_placed = False
         for room in self.rooms:
             # Calculate number of enemies in each room
             size = room.width * room.height
@@ -350,7 +351,11 @@ class Dungeon:
                     place_col = random.randint(room.x1 + 2, room.x2 - 2)
                     place_row = random.randint(room.y1 + 2, room.y2 - 2)
                     place_tile = place_row * self.map_width + place_col
-                room.chests[place_tile] = self.fill_chest()
+                if not key_placed:
+                    room.chests[place_tile] = constants.KEY
+                    key_placed = True
+                else:
+                    room.chests[place_tile] = self.fill_chest()
                 self.tiles[place_tile] = constants.CHEST
                 placed_chests += 1
 
@@ -404,7 +409,13 @@ class Dungeon:
     # Update to take player class into account and make chests have a
     # chance to contain gear for your class
     def fill_chest(self):
-        if random.random() > 0.5:
-            return itemDict["Potion"]
+        if random.random() > 0.25:
+            if random.random() > 0.5:
+                return itemDict["Potion"]
+            else:
+                return itemDict["Elixir"]
         else:
-            return itemDict["Elixir"]
+            if random.random() > 0.5:
+                return itemDict["Large Potion"]
+            else:
+                return itemDict["Large Elixir"]

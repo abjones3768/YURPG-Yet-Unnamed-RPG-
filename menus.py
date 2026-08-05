@@ -45,7 +45,7 @@ class Menu:
             case constants.MAIN_MENU:
                 if self.hovering != True: #If mouse is not hovering then this can be true
                     self.display.fill(self.BLACK)  #Resets menu screen by filling in black
-                    self.draw_text('Yet Unnamed', int(self.DISPLAY_W/constants.TILE_SIZE), self.DISPLAY_W * .5, self.DISPLAY_H * .3)
+                    self.draw_text('Yet Unnamed', self.DISPLAY_W//constants.TILE_SIZE, self.DISPLAY_W * .5, self.DISPLAY_H * .3)
                     self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W*.5, self.DISPLAY_H*.5) #Draws text on the middle of the screen
                     self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
                     self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)

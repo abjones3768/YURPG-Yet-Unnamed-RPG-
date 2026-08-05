@@ -7,6 +7,7 @@ CHEST = 4
 PLAYER = 5
 ENEMY = 6
 SHADOW = 7
+ENEMY_CORPSE = 8
 
 # Menu state values
 MAIN_MENU = 0
@@ -18,6 +19,9 @@ OPTIONS_MENU = 5
 CREDITS = 6
 NEW_GAME = 7
 JOB_SELECT = 8
+
+# dungeon key
+KEY = 0
 
 # tile size
 TILE_SIZE = 16
@@ -62,6 +66,7 @@ tile_colors = {
     PLAYER : (0, 0, 255),
     ENEMY : (255, 0, 0),
     SHADOW : (0, 0, 0),
+    ENEMY_CORPSE : (255, 0, 0)
 }
 
 # Matrices used for isometric mode rendering and click handling

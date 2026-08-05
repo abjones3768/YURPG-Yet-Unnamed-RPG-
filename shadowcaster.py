@@ -5,6 +5,7 @@ class Shadowcaster:
     def __init__(self, width, height):
         # Stores each tile's visibility status
         self.tile_visibility = [0] * (width * height)
+        self.width = width
         
         # Multiplication matrix used to compute x,y offsets in each octant
         # around the player
@@ -47,14 +48,25 @@ class Shadowcaster:
 
                         # Cast light on the current tile:
                         if dx*dx + dy*dy < radius_squared:
-                            index = Y * dungeon.map_width + X
+                            index = Y * self.width + X
                             if self.tile_visibility[index] == 0:
                                 self.tile_visibility[index] = 1
+
+                                # If any enemies are in fov, aggro them and their neighbors
                                 if dungeon.tiles[index] == constants.ENEMY:
                                     enemy = dungeon.enemies[index]
                                     aggro_enemies.append(enemy)
-                                    enemy.path_to_player = enemy.move(player.cur_tile, dungeon, state, grid)
-                                    enemy.move_step = 0
+                                    for row in range(Y-radius//2, Y+radius//2):
+                                        for col in range(X-radius//2, X+radius//2):
+                                            i = row * self.width + col 
+                                            if i in dungeon.enemies:
+                                                neighbor = dungeon.enemies[i]
+                                                if neighbor is not enemy:
+                                                    aggro_enemies.append(neighbor)
+                                    for e in aggro_enemies:
+                                        e.path_to_player = e.move(player.cur_tile, dungeon, state, grid)
+                                        print(f"{e} path len: {len(e.path_to_player)}")
+                                        e.move_step = 0
                         # If in blocked row, keep passing tiles until an unblocked tile is found.
                         # Then set the new starting slope as the slope to the right corner of the
                         # blank tile.
