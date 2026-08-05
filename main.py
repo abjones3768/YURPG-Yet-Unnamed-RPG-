@@ -119,6 +119,9 @@ alreadyMoved = False
 gettingAttack = False
 didAction = False
 gotTarget = False
+menu_choice = 0
+gettingSpell = False
+gotSpell = False
 
 pygame.mixer.music.load(music[constants.MENU_THEME])
 pygame.mixer.music.set_volume(0.5)
@@ -390,17 +393,30 @@ while run:
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.COMBAT_STATE
 
-                    # Menu input
-                    elif e.key == pygame.K_1:
-                        action = MOVE
-                    elif e.key == pygame.K_2:
-                        action = ATTACK
-                    elif e.key == pygame.K_3:
-                        action = MAGIC
-                    elif e.key == pygame.K_4:
-                        action = ITEMS
-                    elif e.key == pygame.K_5:
-                        action = WAIT
+                    if gettingSpell:
+                        if e.key == pygame.K_1:
+                            menu_choice = 1
+                        elif e.key == pygame.K_2:
+                            menu_choice = 2
+                        elif e.key == pygame.K_3:
+                            menu_choice = 3
+                        elif e.key == pygame.K_4:
+                            menu_choice = 4
+                        elif e.key == pygame.K_5:
+                            menu_choice = 5
+                        gettingSpell = False
+                        gotSpell = True
+                    else:
+                        if e.key == pygame.K_1:
+                            action = MOVE
+                        elif e.key == pygame.K_2:
+                            action = ATTACK
+                        elif e.key == pygame.K_3:
+                            action = MAGIC
+                        elif e.key == pygame.K_4:
+                            action = ITEMS
+                        elif e.key == pygame.K_5:
+                            action = WAIT
             
                 # COMBAT MOUSE CLICK HANDLING
                 # NEED TO ADD LOGIC FOR CLICKING MENU BUTTONS
@@ -422,7 +438,6 @@ while run:
                                 sounds[constants.ILLEGAL_MOVE].play()
                     elif dungeon.tiles[move_dest] == constants.ENEMY:
                         target = dungeon.enemies[move_dest]
-                        print(f"Player target: {target}")
                     else:
                         target = -1
 
@@ -511,45 +526,54 @@ while run:
                                 else: # No target, so waiting on input
                                     pass
                             if action == MAGIC:
-                                if not didAction:
+                                if didAction:
+                                    notWaiting = True
+                                    print("Already did action.")
+                                    action = 0
+                                elif not gettingSpell:
+                                    print("Select a spell")
+                                    gettingSpell = True
                                     print("Magic: ")
                                     magicNum = len(actor_turn.magicAttacks)
                                     for i in range(len(actor_turn.magicAttacks)):
                                         print(f"{i + 1}. {actor_turn.magicAttacks[i]}")
-                                    choice = int(input("Choose a spell."))
-                                    while choice > magicNum or choice < 1:
-                                        choice = int(input("Choose a spell."))
-                                    attack = ""
-                                    while attack not in {'U', 'D', 'L', 'R', 'N'}:
-                                        print("Choose a direction to attack (U/D/L/R/N)")
-                                        attack = input()
-                                        attack.strip()
-                                    if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
-                                    if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
-                                    if attack == 'L': target_tile = actor_turn.cur_tile - 1
-                                    if attack == 'R': target_tile = actor_turn.cur_tile + 1
-                                    if attack == 'N': target_tile = actor_turn.cur_tile
-                                    target = None
-                                    for actor in battle_grid.actors:
-                                        if target_tile == actor.cur_tile:
-                                            target = actor
-                                    sounds[constants.MAGIC].play()
-                                    damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
-                                    print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
-                                    if target.health < 1:
-                                        has_moved = True
-                                        sounds[constants.GOBLIN_AGGRO].play()
-                                        print(f"{target.name} defeated!") 
-                                        actor_turn.gainExp(target.level)
-                                        battleTimer.pop(target)
-                                        battle_grid.actors.pop(battle_grid.actors.index(target))
-                                        dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
+                                if gotSpell:
+                                    print("Select a target")
+                                    gettingAttack = True
+                                    gotSpell = False
+                                if not target == -1: # Will have click at this point
+                                    if isinstance(target, Actor): # If attack is targeting a square with an actor
+                                        sounds[constants.MAGIC].play()
+                                        damage = actor_turn.magicAttacks[menu_choice - 1](actor_turn, target)
+                                        menu_choice = 0
+                                        print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
+                                        if target.health < 1:
+                                            print(f"{target.name} defeated!")
+                                            sounds[constants.GOBLIN_AGGRO].play()
+                                            has_moved = True
+                                            if actor_turn is player:
+                                                actor_turn.gainExp(target.level)
+                                            battleTimer.pop(target)
+                                            battle_grid.actors.pop(battle_grid.actors.index(target))
+                                            dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
+                                        didAction = True
+                                        action = 0
+                                        target = None
+                                elif target == -1:
+                                    print("Miss!")
                                     didAction = True
-                                else:
-                                    print("Already used action.")
-                                didAction = True
+                                    action = 0
+                                    target = None
+                                else: # No target, so waiting on input
+                                    pass
                             if action == ITEMS:
-                                if not didAction:
+                                if didAction:
+                                    notWaiting = True
+                                    print("Already did action.")
+                                    action = 0
+                                elif not gettingSpell:
+                                    print("Select an item")
+                                    gettingSpell = True
                                     print("Items: ")
                                     itemNum = len(actor_turn.inventory)
                                     for i in range(itemNum):
@@ -557,16 +581,14 @@ while run:
                                         if actor_turn.items[actor_turn.inventory[i]] == 0:
                                             print("None available.", end="")
                                         print("")
-                                    choice = int(input("Choose an item."))
-                                    while choice > itemNum or choice < 1 or actor_turn.items[actor_turn.inventory[choice - 1]] == 0:
-                                        choice = int(input("Choose an item."))
-                                    itemDict[actor_turn.inventory[choice - 1]].usageFunction(actor_turn)
-                                    print(f"{actor_turn.name} used {itemDict[actor_turn.inventory[choice - 1]].name}. {itemDict[actor_turn.inventory[choice - 1]].usageMessage}")
-                                    actor_turn.items[actor_turn.inventory[choice - 1]] -= 1
+                                if gotSpell:
+                                    itemDict[actor_turn.inventory[menu_choice - 1]].usageFunction(actor_turn)
+                                    print(f"{actor_turn.name} used {itemDict[actor_turn.inventory[menu_choice - 1]].name}. {itemDict[actor_turn.inventory[menu_choice - 1]].usageMessage}")
+                                    actor_turn.items[actor_turn.inventory[menu_choice - 1]] -= 1
                                     didAction = True
+                                    action = 0
                                 else:
-                                    print("Already used action.")
-                                didAction = True
+                                    pass               
                             if action == WAIT:
                                 alreadyMoved = True
                                 didAction = True
