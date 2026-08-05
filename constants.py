@@ -66,7 +66,7 @@ COMBAT_THEME = 1
 tile_colors = {
     FLOOR : (125, 120, 130),
     WALL : (94, 92, 100),
-    DOOR : (125, 88, 55),
+    DOOR : (99, 44, 44),
     WATER : (0, 102, 255),
     CHEST : (205, 171, 143),
     PLAYER_WARRIOR : (0, 0, 255),

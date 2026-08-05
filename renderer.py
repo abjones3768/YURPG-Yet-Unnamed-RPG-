@@ -81,15 +81,22 @@ class Renderer:
             # Convert each tile from world space to viewport space and draw to screen
             for row in range(self.vp_pos[1], vp_end_row):
                 for col in range(self.vp_pos[0], vp_end_col):
+                    use_sprite = False
                     i = row * dungeon.map_width + col
                     x = (col * tile_size) - (self.vp_pos[0] * tile_size)
                     y = (row * tile_size) - (self.vp_pos[1] * tile_size)
                     if sc.tile_visibility[i]:
-                        if dungeon.tiles[i] != constants.ENEMY:
+                        tiletype = dungeon.tiles[i]
+                        if tiletype == constants.FLOOR or tiletype == constants.WALL or tiletype == constants.WATER:
+                            use_sprite = True
+                        elif dungeon.tiles[i] != constants.ENEMY:
                             color = constants.tile_colors[tilemap[i]]
                     else:
                         color = constants.tile_colors[constants.SHADOW]
-                    pygame.draw.rect(surface, color, pygame.Rect(x + self.x_offset, y + self.y_offset, tile_size, tile_size))
+                    if use_sprite:
+                        surface.blit(images[tiletype], (x + self.x_offset, y + self.y_offset))
+                    else:
+                        pygame.draw.rect(surface, color, pygame.Rect(x + self.x_offset, y + self.y_offset, tile_size, tile_size))
             for enemy in battle_grid.actors:
                 en_x = enemy.x - (self.vp_pos[0] * tile_size)
                 en_y = enemy.y - (self.vp_pos[1] * tile_size)
@@ -109,17 +116,6 @@ class Renderer:
                 battle_grid.y1 = max(room.y1, p.y//constants.TILE_SIZE - 20)
                 battle_grid.y2 = min(room.y2, p.y//constants.TILE_SIZE + 20)
 
-                # Add all connected groups of wall/door tiles to sprite groups so they can
-                # be made partially transparent when blocking an actor
-                #for row in range(battle_grid.y1, battle_grid.y2):
-                    #for col in range(battle_grid.x1, battle_grid.x2):
-                        #i = row * dungeon.map_width + col
-                        #if tilemap[i] == constants.WALL:
-                            #battle_grid.obstacle_groups.append([])
-                            #battle_grid.group_obstacles(tilemap, width, i, constants.WALL)
-                        #elif tilemap[i] == constants.DOOR:
-                            #battle_grid.obstacle_groups.append([])
-                            #battle_grid.group_obstacles(tilemap, width, i, constants.DOOR)  
 
                 # calculate projection offsets and player position
                 vp_center = [((viewport_w-1) * constants.TILE_SIZE) //2, ((viewport_h-1) * constants.TILE_SIZE) //2]
@@ -132,7 +128,7 @@ class Renderer:
                     for col in range(battle_grid.x1, battle_grid.x2):             
                             i = row * dungeon.map_width + col
                             pos = self.get_iso_pos(room, row, col)
-                            if tilemap[i] == constants.FLOOR or tilemap[i] == constants.CHEST or tilemap[i] == constants.ENEMY:
+                            if tilemap[i] == constants.FLOOR or tilemap[i] == constants.CHEST or tilemap[i] == constants.ENEMY or tilemap[i] == constants.ENEMY_CORPSE:
                                 battle_grid.background.blit(iso_images[constants.FLOOR], pos)
                             elif tilemap[i] == constants.WATER:
                                 pos[1] += tile_size

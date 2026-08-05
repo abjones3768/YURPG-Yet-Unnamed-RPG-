@@ -27,9 +27,8 @@ def load_images():
     sprites = [
         pygame.image.load("Resources/Images/FLOOR.png").convert_alpha(),
         pygame.image.load("Resources/Images/WALL.png").convert_alpha(),
-        None,
+        pygame.image.load("Resources/Images/DOOR.png").convert_alpha(),
         pygame.image.load("Resources/Images/WATER.png").convert_alpha(),
-        None, None, None, None, None
     ]
     iso_sprites = [
         pygame.image.load("Resources/Images/CUBE_FLOOR_SPRITE.png").convert_alpha(),
@@ -42,6 +41,8 @@ def load_images():
         pygame.image.load("Resources/Images/CUBE_MAGE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_ENEMY.png").convert_alpha(),
     ]
+    for i, img in enumerate(sprites):
+        sprites[i] = pygame.transform.scale(img, (constants.TILE_SIZE, constants.TILE_SIZE))
     for i, img in enumerate(iso_sprites):
         iso_sprites[i] = pygame.transform.scale(img, (constants.TILE_SIZE * 2, constants.TILE_SIZE * 2))
     return sprites, iso_sprites
@@ -385,26 +386,30 @@ while run:
                 # COMBAT MOUSE CLICK HANDLING
                 # NEED TO ADD LOGIC FOR CLICKING MENU BUTTONS
                 if e.type == pygame.MOUSEBUTTONDOWN:
-                    click_pos = (int(e.pos[0]), int(e.pos[1]))
-                    dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)
-                    move_dest = dest_row * dungeon_cols + dest_col
-                    has_moved = True
+                    combat_action = menu.select_combat_option(e)
+                    if combat_action:
+                        print(f"Combat action: {combat_action}")
+                    else:
+                        click_pos = (int(e.pos[0]), int(e.pos[1]))
+                        dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)
+                        move_dest = dest_row * dungeon_cols + dest_col
+                        has_moved = True
 
-                    if dungeon.tiles[move_dest] == constants.FLOOR:
-                        mvmt_actor = player
-                        move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
-                        if move_path and mvmt_actor.movementRange >= len(move_path)-1:
-                            move_step_count = 0
-                            game_state = constants.MOVING_STATE
-                            prev_game_state = constants.COMBAT_STATE
-                            move_start_time = pygame.time.get_ticks()
-                        else:
-                            ended_moving = False
-                            turn_loop = False
-                            sounds[constants.ILLEGAL_MOVE].play()
-                    elif dungeon.tiles[move_dest] == constants.ENEMY:
-                        target = dungeon.enemies[move_dest]
-                        print(f"Player target: {target}")
+                        if dungeon.tiles[move_dest] == constants.FLOOR:
+                            mvmt_actor = player
+                            move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
+                            if move_path and mvmt_actor.movementRange >= len(move_path)-1:
+                                move_step_count = 0
+                                game_state = constants.MOVING_STATE
+                                prev_game_state = constants.COMBAT_STATE
+                                move_start_time = pygame.time.get_ticks()
+                            else:
+                                ended_moving = False
+                                turn_loop = False
+                                sounds[constants.ILLEGAL_MOVE].play()
+                        elif dungeon.tiles[move_dest] == constants.ENEMY:
+                            target = dungeon.enemies[move_dest]
+                            print(f"Player target: {target}")
 
             if not game_over:
                 if not combat_over:          
@@ -574,6 +579,7 @@ while run:
                         prev_game_state = constants.COMBAT_STATE
                         rend_mode = constants.TOP_DOWN
                         shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
+                        combat_over = False
                         continue
             else:
                 if pygame.time.get_ticks() - combat_exit_start > 4000:
@@ -589,6 +595,9 @@ while run:
         # x,y offsets used for smooth movement of player/camera between tiles
         vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, iso_images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
     
+        if game_state == constants.COMBAT_STATE:
+            screen.blit(menu.combat_menu, (0, screen.get_height() - menu.combat_menu.get_height()))
+
         # Tells renderer to run shadowcaster if player moves in top down mode,
         # or to update the battle grid after actor movement if in combat
         if has_moved:

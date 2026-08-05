@@ -30,6 +30,10 @@ class Menu:
         self.Rogue_Button = self.draw_text("Rogue", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
         self.Mage_Button = self.draw_text("Mage", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
         self.job_back_button = self.draw_text("Back", self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
+        self.combat_menu = pygame.Surface((self.DISPLAY_W, self.DISPLAY_H//10), pygame.SRCALPHA)
+        self.combat_buttons = []
+        self.combat_options = ["Move", "Attack", "Magic", "Item", "Wait"]
+        self.create_combat_menu()
         self.hovering = False
         self.job = None
         self.menu_theme = menu_theme
@@ -59,8 +63,6 @@ class Menu:
 
                 self.display.fill(self.BLACK)  # Resets menu screen by filling in black
                 self.draw_text_vertical("Skills", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .95, self.DISPLAY_H * .5, 90)
-            
-            #case constants.COMBAT_MENU: #combat
 
             case constants.OPTIONS_MENU: #Options
                 if self.hovering != True:
@@ -304,3 +306,20 @@ class Menu:
         self.display.blit(vertical_text, text_rect) #Copies text onto the game screen
 
         return text_rect #Returns the rectangle to allow for mouse collision
+
+    def create_combat_menu(self):
+        font = pygame.font.Font(self.font_name, self.DISPLAY_H//32)
+        self.combat_menu.fill((0, 0, 0, 128))
+        btn_offset = self.combat_menu.get_width() // len(self.combat_options)
+        for btn in self.combat_options:
+            text_surface = font.render(btn, True, self.WHITE)
+            self.combat_buttons.append(text_surface.get_rect())
+            self.combat_menu.blit(text_surface, (btn_offset, (self.combat_menu.get_height() - text_surface.get_height()) // 2))
+            btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
+
+    def select_combat_option(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for i, button in enumerate(self.combat_buttons):
+                if button.collidepoint(event.pos):
+                    return i
+            return None
