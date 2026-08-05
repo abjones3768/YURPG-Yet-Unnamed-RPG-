@@ -391,6 +391,9 @@ while run:
                             ended_moving = False
                             turn_loop = False
                             sounds[constants.ILLEGAL_MOVE].play()
+                    elif dungeon.tiles[move_dest] == constants.ENEMY:
+                        target = dungeon.enemies[move_dest]
+                        print(f"Player target: {target}")
                             
             # TURN-BASED COMBAT LOGIC
             if game_state == constants.MOVING_STATE or illegal_move:
