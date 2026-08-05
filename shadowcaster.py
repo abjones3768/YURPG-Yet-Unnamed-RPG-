@@ -6,6 +6,7 @@ class Shadowcaster:
         # Stores each tile's visibility status
         self.tile_visibility = [0] * (width * height)
         self.width = width
+        self.radius = 30
         
         # Multiplication matrix used to compute x,y offsets in each octant
         # around the player
@@ -19,16 +20,16 @@ class Shadowcaster:
     # Check if a tile is blocked (either a wall or door tile)
     def blocked(self, dungeon, x, y):
         i = y * dungeon.map_width + x
-        return dungeon.tiles[i] == constants.WALL or dungeon.tiles[i] == constants.DOOR
+        return dungeon.tiles[i] == constants.WALL or dungeon.tiles[i] == constants.DOOR or dungeon.tiles[i] == constants.LOCKED_DOOR
 
     # Recursive function that casts shadows behind blocked tiles by segmenting tiles
     # surrounding the player into octants and casting rays from the player to the
     # tiles in each octant to identify obstacles
-    def cast_light(self, cx, cy, row, start, end, radius, dungeon, player, state, grid, xx, xy, yx, yy, aggro_enemies):
+    def cast_light(self, cx, cy, row, start, end, dungeon, player, state, grid, xx, xy, yx, yy, aggro_enemies):
             if start < end:
                 return
-            radius_squared = radius*radius
-            for j in range(row, radius+1):
+            radius_squared = self.radius*self.radius
+            for j in range(row, self.radius+1):
                 dx, dy = -j-1, -j
                 blocked = False
                 while dx <= 0:
@@ -56,8 +57,8 @@ class Shadowcaster:
                                 if dungeon.tiles[index] == constants.ENEMY:
                                     enemy = dungeon.enemies[index]
                                     aggro_enemies.append(enemy)
-                                    for row in range(Y-radius//2, Y+radius//2):
-                                        for col in range(X-radius//2, X+radius//2):
+                                    for row in range(Y-self.radius//2, Y+self.radius//2):
+                                        for col in range(X-self.radius//2, X+self.radius//2):
                                             i = row * self.width + col 
                                             if i in dungeon.enemies:
                                                 neighbor = dungeon.enemies[i]
@@ -80,10 +81,10 @@ class Shadowcaster:
                         # If not in a blocked row, check to see if the current tile is blocked.
                         # If it is, then make recursive call for the next row behind it.
                         else:
-                            if self.blocked(dungeon, X, Y) and j < radius:
+                            if self.blocked(dungeon, X, Y) and j < self.radius:
                                 blocked = True
                                 self.cast_light(cx, cy, j+1, start, l_slope,
-                                                radius, dungeon, player, state, grid,
+                                                dungeon, player, state, grid,
                                                 xx, xy, yx, yy, aggro_enemies)
                                 new_start = r_slope
 
@@ -92,10 +93,10 @@ class Shadowcaster:
                     break
     
     # Run the recursive cast light function on each octant of tiles around the player
-    def fov(self, x, y, radius, dungeon, player, state, grid, aggro_enemies):
+    def fov(self, x, y, dungeon, player, state, grid, aggro_enemies):
         # Calculate lit squares from the given location and radius
         self.tile_visibility[dungeon.player_tile] = 1
         for oct in range(constants.OCTANTS):
-            self.cast_light(x, y, 1, 1.0, 0.0, radius, dungeon, player, state, grid,
+            self.cast_light(x, y, 1, 1.0, 0.0, dungeon, player, state, grid,
                             self.mult_matrix[0][oct], self.mult_matrix[1][oct],
                             self.mult_matrix[2][oct], self.mult_matrix[3][oct], aggro_enemies)

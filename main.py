@@ -75,7 +75,9 @@ def load_audio():
         pygame.mixer.Sound("Resources/SFX/ILLEGAL_MOVE.mp3"),
         pygame.mixer.Sound("Resources/SFX/ITEM_FOUND.mp3"),
         pygame.mixer.Sound("Resources/SFX/MAGIC.mp3"),
-        pygame.mixer.Sound("Resources/SFX/GOBLIN_AGGRO.mp3")
+        pygame.mixer.Sound("Resources/SFX/GOBLIN_AGGRO.mp3"),
+        pygame.mixer.Sound("Resources/SFX/EXIT_UNLOCKED.mp3"),
+        #pygame.mixer.Sound("Resources/SFX/KEY_FOUND.mp3")
     ]
     sfx[constants.OPEN_DOOR].set_volume(0.5)
     music = [
@@ -151,7 +153,7 @@ while run:
         job = menu.get_player_job()
         player = Player(dungeon.player_tile%dungeon_cols*constants.TILE_SIZE, dungeon.player_tile//dungeon_cols*constants.TILE_SIZE, dungeon.player_tile, "TEST", job)
         shadowcaster = Shadowcaster(dungeon_cols, dungeon_rows)
-        shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
+        shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
         renderer = Renderer(viewport_cols, viewport_rows)
         battle_grid = BattleGrid(viewport_cols*constants.TILE_SIZE, viewport_rows*constants.TILE_SIZE)
         game_state = constants.EXPLORATION_STATE
@@ -162,8 +164,6 @@ while run:
         has_moved = False
         enemies_aggroed = False
         combat_started = False
-        aggro_enemies.clear()
-        print(f"Player job: {job}")
         continue
     
     # On each frame, clear and redraw the screen
@@ -234,15 +234,9 @@ while run:
                                     pygame.mixer.music.set_volume(0.3)
                                     pygame.mixer.music.play(-1)
 
-            # TOP-DOWN CONTROLS
+            # TOP-DOWN KEY-PRESS CONTROLS
             for e in pygame.event.get():
                 if e.type == pygame.KEYDOWN:
-
-                    # TEST - REMOVE ONCE COMBAT IS IMPLEMENTED
-                    #if e.key == pygame.K_m:
-                        #rend_mode = constants.ISOMETRIC
-                        #start_combat = True
-                        #game_state = constants.COMBAT_STATE
 
                     # To bring up menus from overworld
                     if e.key == pygame.K_ESCAPE:
@@ -258,7 +252,7 @@ while run:
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.EXPLORATION_STATE
 
-                # EXPLORATION MOVEMENT
+                # EXPLORATION MOUSE CLICK HANDLERS
                 if e.type == pygame.MOUSEBUTTONDOWN:
                     dest_col = (int(e.pos[0] - offsets[0]) // constants.TILE_SIZE) + vp_pos[0]
                     dest_row = (int(e.pos[1] - offsets[1]) // constants.TILE_SIZE) + vp_pos[1]
@@ -291,6 +285,17 @@ while run:
                                 sounds[constants.ILLEGAL_MOVE].play()
                             del dungeon.enemies[move_dest]
                             dungeon.tiles[move_dest] = constants.FLOOR
+                    elif dest_tile_val == constants.LOCKED_DOOR:
+                        dist = abs(player.cur_tile - move_dest)
+                        if dist == 1 or dist == dungeon_cols:
+                            if constants.KEY in player.inventory:
+                                sounds[constants.EXIT_UNLOCKED].play()
+                                dungeon.open_door(move_dest, constants.LOCKED_DOOR, constants.EXIT)
+                            else:
+                                sounds[constants.ILLEGAL_MOVE].play()
+                    elif dest_tile_val == constants.EXIT:
+                        pass
+                        # Level complete
 
         ########################################################
                             # MOVING STATE #
@@ -326,7 +331,7 @@ while run:
                                 if dungeon.tiles[next_tile] == constants.DOOR:
                                     if rend_mode == constants.TOP_DOWN:
                                         sounds[constants.OPEN_DOOR].play()
-                                        dungeon.open_door(next_tile)
+                                        dungeon.open_door(next_tile, constants.DOOR, constants.FLOOR)
                                         dungeon.in_room = not dungeon.in_room
                                         changed_rooms = True
                                     else:
@@ -543,7 +548,7 @@ while run:
                     rend_mode = constants.TOP_DOWN
                     sounds[constants.VICTORY].play()
                     pygame.mixer.music.stop()
-                    shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, 32, dungeon, player, game_state, battle_grid, aggro_enemies)
+                    shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
 
         # x,y offsets used for smooth movement of player/camera between tiles
         vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)

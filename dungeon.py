@@ -209,20 +209,38 @@ class Dungeon:
                 else:
                     self.tiles[index] = constants.FLOOR
 
-    def open_door(self, index):
+    def place_exit(self):
+        placed = False
+        while not placed:
+            y = random.randint(self.start_room.y1+1, self.start_room.y2-1)
+            x = self.start_room.x1 if random.random() > 0.5 else self.start_room.x2
+            first_tile = y * self.map_width + x
+            second_tile = first_tile + self.map_width
+            third_tile = first_tile + self.map_width*2
+            if (self.tiles[first_tile - self.map_width] != constants.DOOR and
+                self.tiles[first_tile] == constants.WALL and
+                self.tiles[second_tile] == constants.WALL and
+                self.tiles[third_tile] == constants.WALL and
+                self.tiles[third_tile + self.map_width] != constants.DOOR):
+                self.tiles[first_tile] = constants.LOCKED_DOOR
+                self.tiles[second_tile] = constants.LOCKED_DOOR
+                self.tiles[third_tile] = constants.LOCKED_DOOR
+                placed = True
+
+    def open_door(self, index, start_type, end_type):
         left = index-1
         right = index+1
         up = index-self.map_width
         down = index+self.map_width
-        self.tiles[index] = constants.FLOOR
-        if self.tiles[left] == constants.DOOR:
-            self.open_door(left)
-        if self.tiles[right] == constants.DOOR:
-            self.open_door(right)
-        if self.tiles[up] == constants.DOOR:
-            self.open_door(up)
-        if self.tiles[down] == constants.DOOR:
-            self.open_door(down)
+        self.tiles[index] = end_type
+        if self.tiles[left] == start_type:
+            self.open_door(left, start_type, end_type)
+        if self.tiles[right] == start_type:
+            self.open_door(right, start_type, end_type)
+        if self.tiles[up] == start_type:
+            self.open_door(up, start_type, end_type)
+        if self.tiles[down] == start_type:
+            self.open_door(down, start_type, end_type)
 
     def generateDungeon(self):
         cur_room_count = 1
@@ -235,11 +253,12 @@ class Dungeon:
         self.subdivide_subdungeons()
         self.set_corridor_tiles()
         self.placePlayer()
-        # sort by distance to starting room: dx^2+dy^2=dist
+        # sort by distance to starting room: dx^2+dy^2=dist - for enemy spawning
         self.rooms.sort(key=lambda room: (
             (((room.x1+room.x2)//2 - (self.player_tile%self.map_width)) ** 2) + (((room.y1 + room.y2)//2 - (self.player_tile//self.map_width)) ** 2)
         ))
         self.fill_rooms()
+        self.place_exit()
         return self.tiles
 
     def subdivide_room(self):

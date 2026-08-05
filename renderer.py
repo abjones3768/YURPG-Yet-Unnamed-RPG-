@@ -76,7 +76,7 @@ class Renderer:
 
             # Only run shadowcaster if player has moved
             if moved_status:
-                sc.fov(p.x//tile_size, p.y//tile_size, 48, dungeon, p, state, battle_grid, aggro_enemies)
+                sc.fov(p.x//tile_size, p.y//tile_size, dungeon, p, state, battle_grid, aggro_enemies)
 
             # Convert each tile from world space to viewport space and draw to screen
             for row in range(self.vp_pos[1], vp_end_row):

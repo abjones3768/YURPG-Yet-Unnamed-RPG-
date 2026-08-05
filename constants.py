@@ -8,6 +8,8 @@ PLAYER = 5
 ENEMY = 6
 SHADOW = 7
 ENEMY_CORPSE = 8
+LOCKED_DOOR = 9
+EXIT = 10
 
 # Menu state values
 MAIN_MENU = 0
@@ -51,6 +53,8 @@ ILLEGAL_MOVE = 6
 ITEM_FOUND = 7
 MAGIC = 8
 GOBLIN_AGGRO = 9
+EXIT_UNLOCKED = 10
+KEY_FOUND = 11
 
 # Music track ids
 MENU_THEME = 0
@@ -62,11 +66,13 @@ tile_colors = {
     WALL : (94, 92, 100),
     DOOR : (125, 88, 55),
     WATER : (0, 102, 255),
-    CHEST : (255, 204, 0),
+    CHEST : (205, 171, 143),
     PLAYER : (0, 0, 255),
     ENEMY : (255, 0, 0),
     SHADOW : (0, 0, 0),
-    ENEMY_CORPSE : (255, 0, 0)
+    ENEMY_CORPSE : (255, 0, 0),
+    LOCKED_DOOR : (255, 163, 72),
+    EXIT : (255, 255, 255)
 }
 
 # Matrices used for isometric mode rendering and click handling
