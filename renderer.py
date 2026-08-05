@@ -94,7 +94,7 @@ class Renderer:
                 en_x = enemy.x - (self.vp_pos[0] * tile_size)
                 en_y = enemy.y - (self.vp_pos[1] * tile_size)
                 pygame.draw.rect(surface, constants.tile_colors[constants.ENEMY], pygame.Rect(en_x + self.x_offset, en_y + self.y_offset, tile_size, tile_size))
-            pygame.draw.rect(surface, constants.tile_colors[constants.PLAYER], pygame.Rect(px + self.x_offset, py + self.y_offset, tile_size, tile_size))
+            pygame.draw.rect(surface, constants.tile_colors[p.job], pygame.Rect(px + self.x_offset, py + self.y_offset, tile_size, tile_size))
     
         # ISOMETRIC MODE
         else:
@@ -145,7 +145,7 @@ class Renderer:
                 battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
                     if actor is p:
-                        battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
+                        battle_grid.foreground.blit(images[p.job], (player_pos))
                     else:
                         battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
                 surface.blit(battle_grid.background, (0, 0))
@@ -172,7 +172,7 @@ class Renderer:
                 battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
                     if actor is p:
-                        battle_grid.foreground.blit(images[constants.PLAYER], (player_pos))
+                        battle_grid.foreground.blit(images[p.job], (player_pos))
                     else:
                         battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
                 surface.blit(battle_grid.background, (0, 0))

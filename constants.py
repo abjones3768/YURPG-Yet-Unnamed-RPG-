@@ -4,12 +4,14 @@ WALL = 1
 DOOR = 2
 WATER = 3
 CHEST = 4
-PLAYER = 5
-ENEMY = 6
-SHADOW = 7
-ENEMY_CORPSE = 8
-LOCKED_DOOR = 9
-EXIT = 10
+PLAYER_WARRIOR = 5
+PLAYER_ROGUE = 6
+PLAYER_MAGE = 7
+ENEMY = 8
+SHADOW = 10
+ENEMY_CORPSE = 11
+LOCKED_DOOR = 12
+EXIT = 13
 
 # Menu state values
 MAIN_MENU = 0
@@ -67,7 +69,9 @@ tile_colors = {
     DOOR : (125, 88, 55),
     WATER : (0, 102, 255),
     CHEST : (205, 171, 143),
-    PLAYER : (0, 0, 255),
+    PLAYER_WARRIOR : (0, 0, 255),
+    PLAYER_ROGUE : (0, 255, 0),
+    PLAYER_MAGE : (137, 22, 136),
     ENEMY : (255, 0, 0),
     SHADOW : (0, 0, 0),
     ENEMY_CORPSE : (255, 0, 0),

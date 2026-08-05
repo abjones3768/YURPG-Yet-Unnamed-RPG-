@@ -12,12 +12,11 @@ def characterInit(): # Creates a player object using entered name and job, retur
     return player
 
 class Actor: # Base actor class from which players and enemies inherit from
-    def __init__(self, x, y, cur_tile, tile_type):
+    def __init__(self, x, y, cur_tile):
         self.x = x
         self.y = y
         self.cur_tile = cur_tile
         self.prev_tile = 0
-        self.tile_type = tile_type
         self.inventory = list() # List of item names as strings that refer to dict of item stats
 
 
@@ -73,7 +72,7 @@ class Player(Actor):
     magicAttacks = list() # List of pointers to spells
 
     def __init__(self, x, y, cur_tile, name, job):
-        super().__init__(x, y, cur_tile, constants.PLAYER)
+        super().__init__(x, y, cur_tile)
         self.name = name
         self.job=job
         self.level = 1 
@@ -202,7 +201,7 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
     attackList = list() # List of pointers to all abilites (spells and basic attack)
 
     def __init__(self, x, y, cur_tile):
-        super().__init__(x, y, cur_tile, constants.ENEMY)
+        super().__init__(x, y, cur_tile)
         self.attackList.append(enemyAttack)
         self.path_to_player = []
         self.move_step = 0
@@ -221,7 +220,7 @@ class SuperGoblin(Actor):
     attackList = list() # List of pointers to all abilites (spells and basic attack)
 
     def __init__(self, x, y, cur_tile):
-        super().__init__(x, y, cur_tile, constants.ENEMY)
+        super().__init__(x, y, cur_tile)
         self.attackList.append(enemyAttack)
         self.path_to_player = []
         self.move_step = 0
@@ -242,7 +241,7 @@ class MagicGoblin(Actor):
     attackList = list() # List of pointers to all abilites (spells and basic attack)
 
     def __init__(self, x, y, cur_tile):
-        super().__init__(x, y, cur_tile, constants.ENEMY)
+        super().__init__(x, y, cur_tile)
         self.attackList.append(fireMagic)
         self.path_to_player = []
         self.move_step = 0

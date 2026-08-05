@@ -57,6 +57,8 @@ def load_images():
         pygame.image.load("Resources/Images/CUBE_WATER.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_CHEST.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_WARRIOR.png").convert_alpha(),
+        pygame.image.load("Resources/Images/CUBE_ROGUE.png").convert_alpha(),
+        pygame.image.load("Resources/Images/CUBE_MAGE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_ENEMY.png").convert_alpha(),
     ]
     for i, img in enumerate(images):
@@ -391,7 +393,8 @@ while run:
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.COMBAT_STATE
 
-                # COMBAT INPUT HANDLING
+                # COMBAT MOUSE CLICK HANDLING
+                # NEED TO ADD LOGIC FOR CLICKING MENU BUTTONS
                 if e.type == pygame.MOUSEBUTTONDOWN:
                     click_pos = (int(e.pos[0]), int(e.pos[1]))
                     dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)

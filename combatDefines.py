@@ -1,8 +1,8 @@
 # Job macros
 NUM_OF_JOBS = 3
-WARRIOR = 1
-MAGE = 2
-ROGUE = 3
+WARRIOR = 5
+ROGUE = 6
+MAGE = 7
 
 # Element macros
 NONE = 0
