@@ -424,7 +424,7 @@ while run:
                         target = dungeon.enemies[move_dest]
                         print(f"Player target: {target}")
                     else:
-                        target = "Miss" # im getting desperate
+                        target = -1
 
             if not game_over:
                 if not combat_over:          
@@ -433,13 +433,11 @@ while run:
                         alreadyMoved = True
                     else:
                         if turn_loop:
+                            turn_loop = False
                             if not turns: # Get list of turns
                                 turns = battleGetTurns(battle_grid.actors, battleTimer)
                             if turns: # Retrieve first turn in list
                                 actor_turn = turns.pop(0)
-                            alreadyMoved = False
-                            didAction = False
-                            turn_loop = False
                         if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
                             turn_loop = True
                             # If enemy is 1 tile away from player, attack. Else, move.
@@ -469,10 +467,6 @@ while run:
                                 if dist == 1 or dist == dungeon_cols: 
                                     pass 
                         else:
-                            print("player go turn")
-                            turn_loop = False
-                            alreadyMoved = False
-                            didAction = False
                             if notWaiting:
                                 print(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n")
                                 notWaiting = False
@@ -492,7 +486,7 @@ while run:
                                 elif not gettingAttack:
                                     print("Select target tile")
                                     gettingAttack = True
-                                if target: # Will have click at this point
+                                if not target == -1: # Will have click at this point
                                     if isinstance(target, Actor): # If attack is targeting a square with an actor
                                         damage = playerAttack(actor_turn, target)
                                         sounds[constants.MELEE_ATTACK].play()                        
@@ -509,6 +503,11 @@ while run:
                                         didAction = True
                                         action = 0
                                         target = None
+                                elif target == -1:
+                                    print("Miss!")
+                                    didAction = True
+                                    action = 0
+                                    target = None
                                 else: # No target, so waiting on input
                                     pass
                             if action == MAGIC:
@@ -571,8 +570,13 @@ while run:
                             if action == WAIT:
                                 alreadyMoved = True
                                 didAction = True
+                                action = 0
                                 pass     
                             if alreadyMoved and didAction:
+                                notWaiting = True
+                                print("")
+                                alreadyMoved = False
+                                didAction = False
                                 turn_loop = True                           
                                 
                         if len(battle_grid.actors) == 1 and battle_grid.actors[0] is player and not combat_over:
