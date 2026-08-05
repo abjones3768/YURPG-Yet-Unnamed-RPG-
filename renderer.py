@@ -58,7 +58,7 @@ class Renderer:
         row, col = self.get_iso_tile(p, hover_pos, dungeon)
         print(f"HIGHLIGHT: {col},{row} = {dungeon.tiles[row*dungeon.map_width+col]}")
 
-    def renderTilemap(self, screen_w, screen_h, mode, images, dungeon, p, sc, is_combat, moved_status, viewport_w, viewport_h, tile_size, surface, state, aggro_enemies, battle_grid):
+    def renderTilemap(self, screen_w, screen_h, mode, images, iso_images, dungeon, p, sc, is_combat, moved_status, viewport_w, viewport_h, tile_size, surface, state, aggro_enemies, battle_grid):
         tilemap = dungeon.tiles
 
         # TOP DOWN MODE
@@ -133,21 +133,21 @@ class Renderer:
                             i = row * dungeon.map_width + col
                             pos = self.get_iso_pos(room, row, col)
                             if tilemap[i] == constants.FLOOR or tilemap[i] == constants.CHEST or tilemap[i] == constants.ENEMY:
-                                battle_grid.background.blit(images[constants.FLOOR], pos)
+                                battle_grid.background.blit(iso_images[constants.FLOOR], pos)
                             elif tilemap[i] == constants.WATER:
                                 pos[1] += tile_size
-                                battle_grid.background.blit(images[tilemap[i]], pos)
+                                battle_grid.background.blit(iso_images[tilemap[i]], pos)
                             elif tilemap[i] == constants.WALL or tilemap[i] == constants.DOOR:
-                                battle_grid.background.blit(images[tilemap[i]], pos)
+                                battle_grid.background.blit(iso_images[tilemap[i]], pos)
                                 for j in range(0, 3):
                                     pos[1] -= tile_size
-                                    battle_grid.foreground.blit(images[tilemap[i]], pos)
+                                    battle_grid.foreground.blit(iso_images[tilemap[i]], pos)
                 battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
                     if actor is p:
-                        battle_grid.foreground.blit(images[p.job], (player_pos))
+                        battle_grid.foreground.blit(iso_images[p.job], (player_pos))
                     else:
-                        battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
+                        battle_grid.foreground.blit(iso_images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
             elif moved_status:
@@ -164,17 +164,17 @@ class Renderer:
                             pos = self.get_iso_pos(room, row, col)
                             pos[1] -= tile_size
                             if tilemap[i] == constants.WALL or tilemap[i] == constants.DOOR:
-                                battle_grid.foreground.blit(images[tilemap[i]], pos)
+                                battle_grid.foreground.blit(iso_images[tilemap[i]], pos)
                                 for j in range(0, 2):
                                     pos[1] -= tile_size
-                                    battle_grid.foreground.blit(images[tilemap[i]], pos)
+                                    battle_grid.foreground.blit(iso_images[tilemap[i]], pos)
                             pos[1] += tile_size
                 battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
                     if actor is p:
-                        battle_grid.foreground.blit(images[p.job], (player_pos))
+                        battle_grid.foreground.blit(iso_images[p.job], (player_pos))
                     else:
-                        battle_grid.foreground.blit(images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
+                        battle_grid.foreground.blit(iso_images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
             else:

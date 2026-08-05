@@ -24,20 +24,27 @@ TODO:
 # Load sprites used for isometric rendering and scale them up to 32x32
 # Use sprite.image for drawing and sprite.rect for collision detection in isometric mode
 def load_images():
-    images = [
-        pygame.image.load("Resources/Images/CUBE_FLOOR.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_WALL.png").convert_alpha(),
+    sprites = [
+        pygame.image.load("Resources/Images/FLOOR.png").convert_alpha(),
+        pygame.image.load("Resources/Images/WALL.png").convert_alpha(),
+        None,
+        pygame.image.load("Resources/Images/WATER.png").convert_alpha(),
+        None, None, None, None, None
+    ]
+    iso_sprites = [
+        pygame.image.load("Resources/Images/CUBE_FLOOR_SPRITE.png").convert_alpha(),
+        pygame.image.load("Resources/Images/CUBE_WALL_SPRITE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_DOOR.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_WATER.png").convert_alpha(),
+        pygame.image.load("Resources/Images/CUBE_WATER_SPRITE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_CHEST.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_WARRIOR.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_ROGUE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_MAGE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_ENEMY.png").convert_alpha(),
     ]
-    for i, img in enumerate(images):
-        images[i] = pygame.transform.scale(img, (constants.TILE_SIZE * 2, constants.TILE_SIZE * 2))
-    return images
+    for i, img in enumerate(iso_sprites):
+        iso_sprites[i] = pygame.transform.scale(img, (constants.TILE_SIZE * 2, constants.TILE_SIZE * 2))
+    return sprites, iso_sprites
 
 # Load audio
 def load_audio():
@@ -80,7 +87,7 @@ viewport_rows = screen_height // constants.TILE_SIZE                    # screen
 dungeon_cols = viewport_cols * 10                                       # dungeon width in tile space
 dungeon_rows = viewport_rows * 10                                       # dungeon height in tile space
 clock = pygame.time.Clock()
-images = load_images()
+images, iso_images = load_images()
 sounds, music = load_audio()
 rend_mode = constants.TOP_DOWN
 game_time = 0                                                           # Global game time
@@ -575,7 +582,7 @@ while run:
                     continue
 
         # x,y offsets used for smooth movement of player/camera between tiles
-        vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
+        vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, iso_images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
     
         # Tells renderer to run shadowcaster if player moves in top down mode,
         # or to update the battle grid after actor movement if in combat
