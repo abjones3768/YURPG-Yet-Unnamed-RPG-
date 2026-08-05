@@ -2,6 +2,7 @@ import random
 import constants
 from combatActors import *
 from combatItems import *
+import combatDefines
 
 # Dungeon room templates
 CENTER_WALL_H = 0
@@ -257,7 +258,6 @@ class Dungeon:
         self.rooms.sort(key=lambda room: (
             (((room.x1+room.x2)//2 - (self.player_tile%self.map_width)) ** 2) + (((room.y1 + room.y2)//2 - (self.player_tile//self.map_width)) ** 2)
         ))
-        self.fill_rooms()
         self.place_exit()
         return self.tiles
 
@@ -331,7 +331,7 @@ class Dungeon:
                 return room
 
     # Spawn distribution of enemies in each room based on size.
-    def fill_rooms(self):
+    def fill_rooms(self, p):
         key_placed = False
         for room in self.rooms:
             # Calculate number of enemies in each room
@@ -392,7 +392,7 @@ class Dungeon:
                     room.chests[place_tile] = constants.KEY
                     key_placed = True
                 else:
-                    room.chests[place_tile] = self.fill_chest()
+                    room.chests[place_tile] = self.fill_chest(p)
                 self.tiles[place_tile] = constants.CHEST
                 placed_chests += 1
 
@@ -428,14 +428,76 @@ class Dungeon:
 
     # Update to take player class into account and make chests have a
     # chance to contain gear for your class
-    def fill_chest(self):
-        if random.random() > 0.25:
-            if random.random() > 0.5:
-                return itemDict["Potion"]
-            else:
-                return itemDict["Elixir"]
-        else:
-            if random.random() > 0.5:
-                return itemDict["Large Potion"]
-            else:
-                return itemDict["Large Elixir"]
+    def fill_chest(self, p):
+        match p.job:
+            case combatDefines.WARRIOR:
+                item = random.randint(0, 2)
+                match item:
+                    case 0:
+                        if random.random() > 0.25:
+                            return itemDict["Potion"]
+                        else:
+                            return itemDict["Large Potion"]
+                    case 1:
+                        if random.random() > 0.4:
+                            return weaponDict["Iron Sword"]
+                        elif random.random() > 0.1:
+                            return weaponDict["Steel Sword"]
+                        else:
+                            return weaponDict["Mythril Sword"]
+                    case 2:
+                        if random.random() > 0.4:
+                            return armorDict["Iron Chestplate"]
+                        elif random.random() > 0.1:
+                            return armorDict["Steel Chestplate"]
+                        else:
+                            return armorDict["Mythril Chestplate"]
+            case combatDefines.ROGUE:
+                item = random.randint(0, 2)
+                match item:
+                    case 0:
+                        if random.random() > 0.25:
+                            return itemDict["Potion"]
+                        else:
+                            return itemDict["Large Potion"]
+                    case 1:
+                        if random.random() > 0.4:
+                            return weaponDict["Iron Dagger"]
+                        elif random.random() > 0.1:
+                            return weaponDict["Steel Dagger"]
+                        else:
+                            return weaponDict["Mythril Dagger"]
+                    case 2:
+                        if random.random() > 0.4:
+                            return armorDict["Cloth Shirt"]
+                        elif random.random() > 0.1:
+                            return armorDict["Leather Cuirass"]
+                        else:
+                            return armorDict["Studded Leather Cuirass"]
+            case combatDefines.MAGE:
+                item = random.randint(0, 3)
+                match item:
+                    case 0:
+                        if random.random() > 0.25:
+                            return itemDict["Potion"]
+                        else:
+                            return itemDict["Large Potion"]
+                    case 1:
+                        if random.random() > 0.25:
+                            return itemDict["Elixir"]
+                        else:
+                            return itemDict["Large Elixir"]
+                    case 2:
+                        if random.random() > 0.4:
+                            return weaponDict["Wooden Staff"]
+                        elif random.random() > 0.1:
+                            return weaponDict["Ebony Staff"]
+                        else:
+                            return weaponDict["Staff of Wisdom"]
+                    case 3:
+                        if random.random() > 0.4:
+                            return armorDict["Apprentice Robe"]
+                        elif random.random() > 0.1:
+                            return armorDict["Journeyman Robe"]
+                        else:
+                            return armorDict["Master Robe"]

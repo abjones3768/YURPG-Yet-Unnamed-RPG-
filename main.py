@@ -155,6 +155,7 @@ while run:
         game_state = constants.EXPLORATION_STATE
         job = menu.get_player_job()
         player = Player(dungeon.player_tile%dungeon_cols*constants.TILE_SIZE, dungeon.player_tile//dungeon_cols*constants.TILE_SIZE, dungeon.player_tile, "TEST", job)
+        dungeon.fill_rooms(player)
         shadowcaster = Shadowcaster(dungeon_cols, dungeon_rows)
         shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
         renderer = Renderer(viewport_cols, viewport_rows)
