@@ -110,9 +110,15 @@ battleTimer = {}                                                        # Dict o
 turn_loop = True                                                        # Tracks beginning of battle loop
 actor_turn = None                                                          # Pointer to current actor that has turn
 turns = None
-ended_moving = False
+target = None
+
+notWaiting = True
+action = 0
+playerMoving = False
 alreadyMoved = False
+gettingAttack = False
 didAction = False
+gotTarget = False
 
 pygame.mixer.music.load(music[constants.MENU_THEME])
 pygame.mixer.music.set_volume(0.5)
@@ -345,6 +351,8 @@ while run:
                 else:
                     game_state = prev_game_state
                     prev_game_state = constants.MOVING_STATE
+                    action = 0
+                    playerMoving = False
                     if mvmt_actor is player:
                         if changed_rooms:
                             changed_rooms = False
@@ -382,6 +390,18 @@ while run:
                         game_state = constants.MENU_STATE
                         prev_game_state = constants.COMBAT_STATE
 
+                    # Menu input
+                    elif e.key == pygame.K_1:
+                        action = MOVE
+                    elif e.key == pygame.K_2:
+                        action = ATTACK
+                    elif e.key == pygame.K_3:
+                        action = MAGIC
+                    elif e.key == pygame.K_4:
+                        action = ITEMS
+                    elif e.key == pygame.K_5:
+                        action = WAIT
+            
                 # COMBAT MOUSE CLICK HANDLING
                 # NEED TO ADD LOGIC FOR CLICKING MENU BUTTONS
                 if e.type == pygame.MOUSEBUTTONDOWN:
@@ -389,41 +409,39 @@ while run:
                     dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)
                     move_dest = dest_row * dungeon_cols + dest_col
                     has_moved = True
-
-                    if dungeon.tiles[move_dest] == constants.FLOOR:
-                        mvmt_actor = player
-                        move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
-                        if move_path and mvmt_actor.movementRange >= len(move_path)-1:
-                            move_step_count = 0
-                            game_state = constants.MOVING_STATE
-                            prev_game_state = constants.COMBAT_STATE
-                            move_start_time = pygame.time.get_ticks()
-                        else:
-                            ended_moving = False
-                            turn_loop = False
-                            sounds[constants.ILLEGAL_MOVE].play()
+                    if playerMoving:
+                        if dungeon.tiles[move_dest] == constants.FLOOR:
+                            mvmt_actor = player
+                            move_path = mvmt_actor.move(dest_row * dungeon_cols + dest_col, dungeon, game_state, battle_grid)
+                            if move_path and mvmt_actor.movementRange >= len(move_path)-1:
+                                move_step_count = 0
+                                game_state = constants.MOVING_STATE
+                                prev_game_state = constants.COMBAT_STATE
+                                move_start_time = pygame.time.get_ticks()
+                            else:
+                                sounds[constants.ILLEGAL_MOVE].play()
                     elif dungeon.tiles[move_dest] == constants.ENEMY:
                         target = dungeon.enemies[move_dest]
                         print(f"Player target: {target}")
+                    else:
+                        target = "Miss" # im getting desperate
 
             if not game_over:
                 if not combat_over:          
                     # TURN-BASED COMBAT LOGIC
-                    if game_state == constants.MOVING_STATE or illegal_move:
-                        ended_moving = True
+                    if game_state == constants.MOVING_STATE or illegal_move or playerMoving:
+                        alreadyMoved = True
                     else:
-                        if ended_moving and not alreadyMoved and not illegal_move:
-                            alreadyMoved = True
-                        if ended_moving:
-                            ended_moving = False
-                        if not turns and turn_loop: # Get list of turns
-                            turns = battleGetTurns(battle_grid.actors, battleTimer)
-                        if turns and turn_loop: # Retrieve first turn in list
-                            didAction = False
+                        if turn_loop:
+                            if not turns: # Get list of turns
+                                turns = battleGetTurns(battle_grid.actors, battleTimer)
+                            if turns: # Retrieve first turn in list
+                                actor_turn = turns.pop(0)
                             alreadyMoved = False
-                            actor_turn = turns.pop(0)
+                            didAction = False
                             turn_loop = False
                         if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
+                            turn_loop = True
                             # If enemy is 1 tile away from player, attack. Else, move.
                             dist = abs(actor_turn.cur_tile - player.cur_tile)
                             if dist == 1 or dist == dungeon_cols:
@@ -439,8 +457,6 @@ while run:
                                     sounds[constants.GAME_OVER].play()
                                     combat_exit_start = pygame.time.get_ticks()
                                     game_over = True
-
-                                turn_loop = True
                             else:
                                 move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
                                 if move_path:
@@ -452,33 +468,31 @@ while run:
                                     move_start_time = pygame.time.get_ticks()
                                 if dist == 1 or dist == dungeon_cols: 
                                     pass 
-                                else:
-                                    turn_loop = True
                         else:
-                            action = 0
-                            while action < 1 or action > 5:
-                                action = int(input(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
+                            print("player go turn")
+                            turn_loop = False
+                            alreadyMoved = False
+                            didAction = False
+                            if notWaiting:
+                                print(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n")
+                                notWaiting = False
                             if action == MOVE:
-                                if not alreadyMoved:
-                                    input("player move (hit enter after clicking)")
+                                if alreadyMoved:
+                                    notWaiting = True
+                                    print("Already Moved")
+                                    action = 0
                                 else:
-                                    print("Already moved.")
+                                    print("Select target tile")
+                                    playerMoving = True
                             if action == ATTACK:
-                                if not didAction:
-                                    attack = ""
-                                    while attack not in {'U', 'D', 'L', 'R', 'N'}:
-                                        print("Choose a direction to attack (U/D/L/R/N)")
-                                        attack = input()
-                                        attack.strip()
-                                    if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
-                                    if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
-                                    if attack == 'L': target_tile = actor_turn.cur_tile - 1
-                                    if attack == 'R': target_tile = actor_turn.cur_tile + 1
-                                    if attack == 'N': target_tile = actor_turn.cur_tile
-                                    target = None
-                                    for actor in battle_grid.actors:
-                                        if target_tile == actor.cur_tile:
-                                            target = actor
+                                if didAction:
+                                    notWaiting = True
+                                    print("Already did action.")
+                                    action = 0
+                                elif not gettingAttack:
+                                    print("Select target tile")
+                                    gettingAttack = True
+                                if target: # Will have click at this point
                                     if isinstance(target, Actor): # If attack is targeting a square with an actor
                                         damage = playerAttack(actor_turn, target)
                                         sounds[constants.MELEE_ATTACK].play()                        
@@ -492,11 +506,11 @@ while run:
                                             battleTimer.pop(target)
                                             battle_grid.actors.pop(battle_grid.actors.index(target))
                                             dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
-                                    else:
-                                        print("Miss!")
-                                    didAction = True
-                                else:
-                                    print("Already used action.")
+                                        didAction = True
+                                        action = 0
+                                        target = None
+                                else: # No target, so waiting on input
+                                    pass
                             if action == MAGIC:
                                 if not didAction:
                                     print("Magic: ")
@@ -534,6 +548,7 @@ while run:
                                     didAction = True
                                 else:
                                     print("Already used action.")
+                                didAction = True
                             if action == ITEMS:
                                 if not didAction:
                                     print("Items: ")
@@ -552,12 +567,13 @@ while run:
                                     didAction = True
                                 else:
                                     print("Already used action.")
+                                didAction = True
                             if action == WAIT:
                                 alreadyMoved = True
                                 didAction = True
-                                pass
+                                pass     
                             if alreadyMoved and didAction:
-                                turn_loop = True
+                                turn_loop = True                           
                                 
                         if len(battle_grid.actors) == 1 and battle_grid.actors[0] is player and not combat_over:
                             combat_over = True
