@@ -101,6 +101,8 @@ turn_loop = True                                                        # Tracks
 actor_turn = None                                                          # Pointer to current actor that has turn
 turns = None
 ended_moving = False
+alreadyMoved = False
+didAction = False
 
 pygame.mixer.music.load(music[constants.MENU_THEME])
 pygame.mixer.music.set_volume(0.5)
@@ -391,18 +393,20 @@ while run:
                             sounds[constants.ILLEGAL_MOVE].play()
                             
             # TURN-BASED COMBAT LOGIC
-            if game_state == constants.MOVING_STATE:
+            if game_state == constants.MOVING_STATE or illegal_move:
                 print("moving")
                 ended_moving = True
                 turn_loop = True
             else:
+                if ended_moving and not alreadyMoved and not illegal_move:
+                    alreadyMoved = True
                 if ended_moving:
-                    turn_loop = True
                     ended_moving = False
                 if not turns and turn_loop: # Get list of turns
                     turns = battleGetTurns(battle_grid.actors, battleTimer)
-                    alreadyMoved = False
                 if turns and turn_loop: # Retrieve first turn in list
+                    didAction = False
+                    alreadyMoved = False
                     actor_turn = turns.pop(0)
                     turn_loop = False
                 if not isinstance(actor_turn, Player): # If actor is not player (is enemy)
@@ -441,90 +445,106 @@ while run:
                     while action < 1 or action > 5:
                         action = int(input(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
                     if action == MOVE:
-                        if alreadyMoved:
-                            print("Already moved.")
-                        else:
+                        if not alreadyMoved:
                             input("player move (hit enter after clicking)")
-                            turn_loop = True
+                        else:
+                            print("Already moved.")
                     if action == ATTACK:
-                        attack = ""
-                        while attack not in {'U', 'D', 'L', 'R'}:
-                            print("Choose a direction to attack (U/D/L/R)")
-                            attack = input()
-                            attack.strip()
-                        if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
-                        if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
-                        if attack == 'L': target_tile = actor_turn.cur_tile - 1
-                        if attack == 'R': target_tile = actor_turn.cur_tile + 1
-                        target = None
-                        for actor in battle_grid.actors:
-                            if target_tile == actor.cur_tile:
-                                target = actor
-                        if isinstance(target, Actor): # If attack is targeting a square with an actor
-                            damage = playerAttack(actor_turn, target)
-                            sounds[constants.MELEE_ATTACK].play()                        
+                        if not didAction:
+                            attack = ""
+                            while attack not in {'U', 'D', 'L', 'R', 'N'}:
+                                print("Choose a direction to attack (U/D/L/R/N)")
+                                attack = input()
+                                attack.strip()
+                            if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
+                            if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
+                            if attack == 'L': target_tile = actor_turn.cur_tile - 1
+                            if attack == 'R': target_tile = actor_turn.cur_tile + 1
+                            if attack == 'N': target_tile = actor_turn.cur_tile
+                            target = None
+                            for actor in battle_grid.actors:
+                                if target_tile == actor.cur_tile:
+                                    target = actor
+                            if isinstance(target, Actor): # If attack is targeting a square with an actor
+                                damage = playerAttack(actor_turn, target)
+                                sounds[constants.MELEE_ATTACK].play()                        
+                                print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
+                                if target.health < 1:
+                                    print(f"{target.name} defeated!")
+                                    sounds[constants.GOBLIN_AGGRO].play()
+                                    has_moved = True
+                                    if actor_turn is player:
+                                        actor_turn.gainExp(target.level)
+                                    battleTimer.pop(target)
+                                    battle_grid.actors.pop(battle_grid.actors.index(target))
+                                    dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
+                            else:
+                                print("Miss!")
+                            didAction = True
+                        else:
+                            print("Already used action.")
+                    if action == MAGIC:
+                        if not didAction:
+                            print("Magic: ")
+                            magicNum = len(actor_turn.magicAttacks)
+                            for i in range(len(actor_turn.magicAttacks)):
+                                print(f"{i + 1}. {actor_turn.magicAttacks[i]}")
+                            choice = int(input("Choose a spell."))
+                            while choice > magicNum or choice < 1:
+                                choice = int(input("Choose a spell."))
+                            attack = ""
+                            while attack not in {'U', 'D', 'L', 'R', 'N'}:
+                                print("Choose a direction to attack (U/D/L/R/N)")
+                                attack = input()
+                                attack.strip()
+                            if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
+                            if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
+                            if attack == 'L': target_tile = actor_turn.cur_tile - 1
+                            if attack == 'R': target_tile = actor_turn.cur_tile + 1
+                            if attack == 'N': target_tile = actor_turn.cur_tile
+                            target = None
+                            for actor in battle_grid.actors:
+                                if target_tile == actor.cur_tile:
+                                    target = actor
+                            sounds[constants.MAGIC].play()
+                            damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
                             print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
                             if target.health < 1:
-                                print(f"{target.name} defeated!")
-                                sounds[constants.GOBLIN_AGGRO].play()
                                 has_moved = True
-                                if actor_turn is player:
-                                    actor_turn.gainExp(target.level)
+                                sounds[constants.GOBLIN_AGGRO].play()
+                                print(f"{target.name} defeated!") 
+                                actor_turn.gainExp(target.level)
                                 battleTimer.pop(target)
                                 battle_grid.actors.pop(battle_grid.actors.index(target))
                                 dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
+                            didAction = True
                         else:
-                            print("Miss!")
-                    if action == MAGIC:
-                        print("Magic: ")
-                        magicNum = len(actor_turn.magicAttacks)
-                        for i in range(len(actor_turn.magicAttacks)):
-                            print(f"{i + 1}. {actor_turn.magicAttacks[i]}")
-                        choice = int(input("Choose a spell."))
-                        while choice > magicNum or choice < 1:
-                            choice = int(input("Choose a spell."))
-                        attack = ""
-                        while attack not in {'U', 'D', 'L', 'R'}:
-                            print("Choose a direction to attack (U/D/L/R)")
-                            attack = input()
-                            attack.strip()
-                        if attack == 'U': target_tile = actor_turn.cur_tile - dungeon_cols
-                        if attack == 'D': target_tile = actor_turn.cur_tile + dungeon_cols
-                        if attack == 'L': target_tile = actor_turn.cur_tile - 1
-                        if attack == 'R': target_tile = actor_turn.cur_tile + 1
-                        target = None
-                        for actor in battle_grid.actors:
-                            if target_tile == actor.cur_tile:
-                                target = actor
-                        sounds[constants.MAGIC].play()
-                        damage = actor_turn.magicAttacks[choice - 1](actor_turn, target)
-                        print(f"{actor_turn.name} dealt {damage} damage to {target.name}!")
-                        if actor.health < 1:
-                            has_moved = True
-                            sounds[constants.GOBLIN_AGGRO].play()
-                            print(f"{target.name} defeated!") 
-                            actor.gainExp(target.level)
-                            battleTimer.pop(target)
-                            battle_grid.actors.pop(battle_grid.actors.index(target))
-                            dungeon.tiles[target.cur_tile] = constants.ENEMY_CORPSE
+                            print("Already used action.")
                     if action == ITEMS:
-                        print("Items: ")
-                        itemNum = len(actor_turn.inventory)
-                        for i in range(itemNum):
-                            print(f"{i + 1}. {actor_turn.inventory[i]}. ", end="")
-                            if actor_turn.items[actor_turn.inventory[i]] == 0:
-                                print("None available.", end="")
-                            print("")
-                        choice = int(input("Choose an item."))
-                        while choice > itemNum or choice < 1 or actor_turn.items[actor_turn.inventory[choice - 1]] == 0:
+                        if not didAction:
+                            print("Items: ")
+                            itemNum = len(actor_turn.inventory)
+                            for i in range(itemNum):
+                                print(f"{i + 1}. {actor_turn.inventory[i]}. ", end="")
+                                if actor_turn.items[actor_turn.inventory[i]] == 0:
+                                    print("None available.", end="")
+                                print("")
                             choice = int(input("Choose an item."))
-                        itemDict[actor_turn.inventory[choice - 1]].usageFunction(actor_turn)
-                        print(f"{actor_turn.name} used {itemDict[actor_turn.inventory[choice - 1]].name}. {itemDict[actor_turn.inventory[choice - 1]].usageMessage}")
-                        actor_turn.items[actor_turn.inventory[choice - 1]] -= 1
-    
+                            while choice > itemNum or choice < 1 or actor_turn.items[actor_turn.inventory[choice - 1]] == 0:
+                                choice = int(input("Choose an item."))
+                            itemDict[actor_turn.inventory[choice - 1]].usageFunction(actor_turn)
+                            print(f"{actor_turn.name} used {itemDict[actor_turn.inventory[choice - 1]].name}. {itemDict[actor_turn.inventory[choice - 1]].usageMessage}")
+                            actor_turn.items[actor_turn.inventory[choice - 1]] -= 1
+                            didAction = True
+                        else:
+                            print("Already used action.")
                     if action == WAIT:
+                        alreadyMoved = True
+                        didAction = True
                         pass
-                    #turn_loop = True
+                    if alreadyMoved and didAction:
+                        turn_loop = True
+                        
                 if len(battle_grid.actors) == 1 and battle_grid.actors[0] is player:
                     battleTimer.clear()
                     battle_grid.actors.clear()

@@ -117,6 +117,7 @@ class Player(Actor):
                 self.magicAttacks.append(fireMagic)
                 self.magicAttacks.append(iceMagic)
                 self.magicAttacks.append(thunderMagic)
+                self.magicAttacks.append(healingMagic)
             case _ if job == ROGUE:
                 self.movementRange = 12
                 self.maxHealth = 40
