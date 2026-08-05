@@ -447,6 +447,7 @@ while run:
                     ended_moving = False
                 if not turns and turn_loop: # Get list of turns
                     turns = battleGetTurns(battle_grid.actors, battleTimer)
+                    alreadyMoved = False
                 if turns and turn_loop: # Retrieve first turn in list
                     actor_turn = turns.pop(0)
                     turn_loop = False
@@ -470,8 +471,8 @@ while run:
                             game_state = constants.MOVING_STATE
                             prev_game_state = constants.COMBAT_STATE
                             move_start_time = pygame.time.get_ticks()
-                        if dist == 1 or dist == dungeon_cols: # gobby is a little silly and only attacks or moves per turn
-                            pass                              # need to fix that later
+                        if dist == 1 or dist == dungeon_cols: 
+                            pass 
                         else:
                             turn_loop = True
                 else:
@@ -479,8 +480,11 @@ while run:
                     while action < 1 or action > 5:
                         action = int(input(f"Choose an option for {actor_turn.name}.\n1. Move\n2. Attack\n3. Magic\n4. Items\n5. Wait\n"))
                     if action == MOVE:
-                        input("player move (hit enter after clicking)")
-                        turn_loop = True
+                        if alreadyMoved:
+                            print("Already moved.")
+                        else:
+                            input("player move (hit enter after clicking)")
+                            turn_loop = True
                     if action == ATTACK:
                         attack = ""
                         while attack not in {'U', 'D', 'L', 'R'}:

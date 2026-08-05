@@ -192,7 +192,7 @@ class Goblin(Actor): # Remaining class definitions are for enemy types
     health = 10
     maxHealth = 10
 
-    strength = 2
+    strength = 17
     speed = 8
 
     weakness = FIRE
@@ -213,7 +213,7 @@ class SuperGoblin(Actor):
     health = 30
     maxHealth = 30
 
-    strength = 8
+    strength = 32
     speed = 12
 
     level = 2
@@ -234,7 +234,7 @@ class MagicGoblin(Actor):
     
     magic = 8
 
-    strength = 1
+    strength = 0
     speed = 10
 
     level = 3
