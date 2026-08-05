@@ -399,7 +399,6 @@ while run:
             if game_state == constants.MOVING_STATE or illegal_move:
                 print("moving")
                 ended_moving = True
-                turn_loop = True
             else:
                 if ended_moving and not alreadyMoved and not illegal_move:
                     alreadyMoved = True
