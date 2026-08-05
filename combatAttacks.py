@@ -124,6 +124,11 @@ def healingMagic(attacker, defender):
     defender.health += damage
     return int(damage)
 
+def selfHeal(attacker, defender): # Used for dragon, not used by player
+    damage = -50
+    attacker.health += 50
+    return int(damage)
+
 magicList = list()
 magicList.append("Fire")
 magicList.append("Ice")

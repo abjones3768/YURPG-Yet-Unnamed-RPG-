@@ -3,7 +3,7 @@ from combatAttacks import *
 import pathfinder
 import constants
 
-def characterInit(): # Creates a player object using entered name and job, returns pointer to object
+def TESTcharacterInit(): # Creates a player object using entered name and job, returns pointer to object
     name = input("Enter character name:\n")
     job = int(input("Enter job.\n1. Warrior\n2. Mage\n3. Rogue\n"))
     while job < 1 or job > NUM_OF_JOBS:
@@ -244,5 +244,55 @@ class MagicGoblin(Actor):
     def __init__(self, x, y, cur_tile):
         super().__init__(x, y, cur_tile)
         self.attackList.append(fireMagic)
+        self.path_to_player = []
+        self.move_step = 0
+
+class LightGoblin(Actor):
+    name = "Light Goblin"
+    movementRange = 8
+    health = 30
+    maxHealth = 30
+    
+    magic = 12
+
+    strength = 2
+    speed = 12
+
+    absorb = THUNDER
+
+    level = 4
+
+    attackList = list() # List of pointers to all abilites (spells and basic attack)
+
+    def __init__(self, x, y, cur_tile):
+        super().__init__(x, y, cur_tile)
+        self.attackList.append(thunderMagic)
+        self.path_to_player = []
+        self.move_step = 0
+
+class Dragon(Actor):
+    name = "Dragon"
+    movementRange = 16
+    health = 100
+    maxHealth = 100
+    
+    magic = 20
+
+    strength = 20
+    speed = 16
+
+    immune = THUNDER
+    resistant = ICE
+    absorb = FIRE
+
+    level = 4
+
+    attackList = list() # List of pointers to all abilites (spells and basic attack)
+
+    def __init__(self, x, y, cur_tile):
+        super().__init__(x, y, cur_tile)
+        self.attackList.append(enemyAttack)
+        self.attackList.append(fireMagic)
+        self.attackList.append(selfHeal)
         self.path_to_player = []
         self.move_step = 0
