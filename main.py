@@ -140,6 +140,7 @@ battle_grid = None
 aggro_enemies = []
 enemies_aggroed = False
 cur_combat_actor = 0
+game_over = False
 
 # Game loop
 run = True
@@ -412,7 +413,6 @@ while run:
                         else:
                             sounds[constants.ILLEGAL_MOVE].play()
                             
-            
             # TURN-BASED COMBAT LOGIC
             if game_state == constants.MOVING_STATE:
                 print("moving")
@@ -437,7 +437,13 @@ while run:
                         if player.health < 1:
                             print(f"{player.name} defeated!") 
                             battleTimer.pop(player)
-                            print("this is game over lol")
+                            
+                            # GAME OVER - play sound effect, wait a few seconds, and then go to main menu
+                            if not game_over:
+                                sounds[constants.GAME_OVER].play()
+                                game_over_start = pygame.time.get_ticks()
+                                game_over = True
+
                         turn_loop = True
                     else:
                         move_path = actor_turn.move(player.cur_tile, dungeon, game_state, battle_grid)
@@ -552,6 +558,11 @@ while run:
                     sounds[constants.VICTORY].play()
                     pygame.mixer.music.stop()
                     shadowcaster.fov(player.x//constants.TILE_SIZE, player.y//constants.TILE_SIZE, dungeon, player, game_state, battle_grid, aggro_enemies)
+                elif game_over:
+                    if pygame.time.get_ticks() - game_over_start > 3000:
+                        game_state = MENU_STATE
+                        prev_game_state = None
+                        menu.menu_state = MAIN_MENU
 
         # x,y offsets used for smooth movement of player/camera between tiles
         vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
