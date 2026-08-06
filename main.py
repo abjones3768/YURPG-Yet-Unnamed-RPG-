@@ -551,6 +551,7 @@ while run:
                                         print(f"{i + 1}. {actor_turn.magicAttacks[i]}")
                                 if gotSpell:
                                     print("Select a target")
+                                    target = None
                                     gettingAttack = True
                                     gotSpell = False
                                 if not target == -1: # Will have click at this point
