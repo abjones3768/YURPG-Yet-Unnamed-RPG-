@@ -8,10 +8,10 @@ PLAYER_WARRIOR = 5
 PLAYER_ROGUE = 6
 PLAYER_MAGE = 7
 ENEMY = 8
+LOCKED_DOOR = 9
 SHADOW = 10
 ENEMY_CORPSE = 11
-LOCKED_DOOR = 12
-EXIT = 13
+EXIT = 12
 
 # Menu state values
 MAIN_MENU = 0
@@ -73,9 +73,9 @@ tile_colors = {
     PLAYER_ROGUE : (0, 255, 0),
     PLAYER_MAGE : (137, 22, 136),
     ENEMY : (255, 0, 0),
+    LOCKED_DOOR : (255, 163, 72),
     SHADOW : (0, 0, 0),
     ENEMY_CORPSE : (255, 0, 0),
-    LOCKED_DOOR : (255, 163, 72),
     EXIT : (255, 255, 255)
 }
 

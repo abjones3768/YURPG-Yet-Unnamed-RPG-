@@ -29,17 +29,22 @@ def load_images():
         pygame.image.load("Resources/Images/WALL.png").convert_alpha(),
         pygame.image.load("Resources/Images/DOOR.png").convert_alpha(),
         pygame.image.load("Resources/Images/WATER.png").convert_alpha(),
+        pygame.image.load("Resources/Images/CHEST.png").convert_alpha(),
+        pygame.image.load("Resources/Images/PLAYER_WARRIOR.png").convert_alpha(),
+        pygame.image.load("Resources/Images/PLAYER_ROGUE.png").convert_alpha(),
+        pygame.image.load("Resources/Images/PLAYER_MAGE.png").convert_alpha(),
+        pygame.image.load("Resources/Images/ENEMY.png").convert_alpha(),
+        pygame.image.load("Resources/Images/LOCKED_DOOR.png").convert_alpha()
     ]
     iso_sprites = [
         pygame.image.load("Resources/Images/CUBE_FLOOR_SPRITE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_WALL_SPRITE.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_DOOR.png").convert_alpha(),
+        pygame.image.load("Resources/Images/CUBE_DOOR_SPRITE.png").convert_alpha(),
         pygame.image.load("Resources/Images/CUBE_WATER_SPRITE.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_CHEST.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_WARRIOR.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_ROGUE.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_MAGE.png").convert_alpha(),
-        pygame.image.load("Resources/Images/CUBE_ENEMY.png").convert_alpha(),
+        pygame.image.load("Resources/Images/PLAYER_WARRIOR.png").convert_alpha(),
+        pygame.image.load("Resources/Images/PLAYER_ROGUE.png").convert_alpha(),
+        pygame.image.load("Resources/Images/PLAYER_MAGE.png").convert_alpha(),
+        pygame.image.load("Resources/Images/ENEMY.png").convert_alpha(),
     ]
     for i, img in enumerate(sprites):
         sprites[i] = pygame.transform.scale(img, (constants.TILE_SIZE, constants.TILE_SIZE))
@@ -126,7 +131,7 @@ gotSpell = False
 
 pygame.mixer.music.load(music[constants.MENU_THEME])
 pygame.mixer.music.set_volume(0.5)
-menu = init_main_menu(screen_width, screen_height, game_state, screen, sounds, pygame.mixer.music)
+menu = init_main_menu(screen_width, screen_height, game_state, screen, sounds, music)
 main_background = Vortex(screen_width, screen_height, 600, screen)
 dungeon = None
 player = None
@@ -165,6 +170,8 @@ while run:
         has_moved = False
         enemies_aggroed = False
         combat_started = False
+        game_over = False
+        combat_over = False
         continue
     
     # On each frame, clear and redraw the screen
@@ -424,7 +431,7 @@ while run:
                 if e.type == pygame.MOUSEBUTTONDOWN:
                     action = menu.select_combat_option(e)
                     if action:
-                        print(f"Combat action: {action}")
+                        pass
                     else:
                         click_pos = (int(e.pos[0]), int(e.pos[1]))
                         dest_row, dest_col = renderer.get_iso_tile(player, click_pos, dungeon)
@@ -638,7 +645,16 @@ while run:
         vp_pos, offsets = renderer.renderTilemap(screen_width, screen_height, rend_mode, images, iso_images, dungeon, player, shadowcaster, start_combat, has_moved, viewport_cols, viewport_rows, constants.TILE_SIZE, screen, game_state, aggro_enemies, battle_grid)
     
         if game_state == constants.COMBAT_STATE:
-            screen.blit(menu.combat_menu, (0, 0))
+            if not action:
+                screen.blit(menu.combat_bar, (0, 0))
+            elif action == MOVE:
+                screen.blit(menu.move_bar, (0, 0))
+            elif action == MAGIC:
+                if gettingSpell:
+                    screen.blit(menu.magic_select, (0, 0))
+            elif action == ITEMS:
+                if gettingSpell:
+                    screen.blit(menu.create_item_menu(player), (0, 0))
 
         # Tells renderer to run shadowcaster if player moves in top down mode,
         # or to update the battle grid after actor movement if in combat

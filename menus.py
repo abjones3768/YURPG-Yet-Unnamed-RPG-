@@ -1,10 +1,11 @@
 import pygame
 import constants
 import combatDefines
+import combatItems
 
 
 class Menu:
-    def __init__(self, W, H, game_state, window, sfx, menu_theme):  #Initializer/constructor in class
+    def __init__(self, W, H, game_state, window, sfx, music):  #Initializer/constructor in class
         
         self.menu_state = constants.MAIN_MENU  #The gamestate will begin in the main menu
         self.playing, self.game_active = True, False
@@ -16,7 +17,6 @@ class Menu:
         self.window = window  #Creates window of same dimensions
         self.font_name = '8-BIT WONDER.TTF'  #Points to font
         self.BLACK, self.WHITE = (0, 0, 0, 0), (255, 255, 255)  #Set these colors
-
         self.New_Button = self.draw_text('New Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .5)  #These will be the rectangle attributes for mouse collision detection
         self.Load_Button = self.draw_text('Load Game', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
         self.Credits_Button = self.draw_text('Credits', self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
@@ -30,14 +30,24 @@ class Menu:
         self.Rogue_Button = self.draw_text("Rogue", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .6)
         self.Mage_Button = self.draw_text("Mage", self.DISPLAY_W//constants.TILE_SIZE//4, self.DISPLAY_W * .5, self.DISPLAY_H * .7)
         self.job_back_button = self.draw_text("Back", self.DISPLAY_W//constants.TILE_SIZE//8, self.DISPLAY_W * .5, self.DISPLAY_H * .8)
-        self.combat_menu = pygame.Surface((self.DISPLAY_W, self.DISPLAY_H//10), pygame.SRCALPHA)
-        self.combat_buttons = []
+        self.move_instructions = ["Select", "tile", "to", "move", "to"]
+        self.magic_options = ["Fire", "Ice", "Thunder", "Heal"]
         self.combat_options = ["Move", "Attack", "Magic", "Item", "Wait"]
-        self.create_combat_menu()
+        self.item_options = ["Potion", "Elixir", "Large Potion", "Large Elixir"]
+        self.move_bar = self.create_combat_display(self.move_instructions)
+        self.magic_buttons = []
+        self.combat_buttons = []
+        self.item_buttons = []
+        self.player_ref = None
+        self.item_select = None
+        self.combat_bar = self.create_combat_menu(self.combat_options, self.combat_buttons)
+        self.magic_select = self.create_combat_menu(self.magic_options, self.magic_buttons)
         self.hovering = False
         self.job = None
-        self.menu_theme = menu_theme
-        self.menu_theme.play(-1)
+        self.music = music
+        pygame.mixer.music.load(music[constants.MENU_THEME])
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
 
     def get_player_job(self):
         return self.job
@@ -137,17 +147,17 @@ class Menu:
                         self.job = combatDefines.WARRIOR
                         self.menu_state = constants.NEW_GAME
                         self.game_active = True
-                        self.menu_theme.stop()
+                        pygame.mixer.music.stop()
                     elif self.Rogue_Button.collidepoint(event.pos):
                         self.job = combatDefines.ROGUE
                         self.menu_state = constants.NEW_GAME
                         self.game_active = True
-                        self.menu_theme.stop()
+                        pygame.mixer.music.stop()
                     elif self.Mage_Button.collidepoint(event.pos):
                         self.job = combatDefines.MAGE
                         self.menu_state = constants.NEW_GAME
                         self.game_active = True
-                        self.menu_theme.stop()
+                        pygame.mixer.music.stop()
                     elif self.job_back_button.collidepoint(event.pos):
                         self.menu_state = constants.MAIN_MENU
                     self.SFX[constants.BUTTON_CLICK].play()
@@ -164,7 +174,9 @@ class Menu:
                     if self.Menu_Button.collidepoint(event.pos): #GO MAIN MENU
                         self.SFX[constants.BUTTON_CLICK].play()
                         if self.game_active:
-                            self.menu_theme.play(-1)
+                            pygame.mixer.music.load(self.music[constants.MENU_THEME])
+                            pygame.mixer.music.set_volume(0.5)
+                            pygame.mixer.music.play(-1)
                             self.game_active = False
                         self.menu_state = constants.MAIN_MENU
                     elif self.Exit_Button.collidepoint(event.pos): #EXIT GAME
@@ -307,16 +319,44 @@ class Menu:
 
         return text_rect #Returns the rectangle to allow for mouse collision
 
-    def create_combat_menu(self):
+    def create_combat_display(self, options):
+        bar = pygame.Surface((self.DISPLAY_W, self.DISPLAY_H//10), pygame.SRCALPHA)
         font = pygame.font.Font(self.font_name, self.DISPLAY_H//32)
-        self.combat_menu.fill((0, 0, 0, 128))
-        btn_offset = self.combat_menu.get_width() // len(self.combat_options)
-        for btn in self.combat_options:
+        bar.fill((0, 0, 0, 0))
+        btn_offset = bar.get_width() // len(options)
+        for btn in options:
             text_surface = font.render(btn, True, self.WHITE)
-            text_rect = text_rect = text_surface.get_rect(midbottom=(btn_offset, self.combat_menu.get_height()))
-            self.combat_buttons.append(text_rect)
-            self.combat_menu.blit(text_surface, text_rect)
+            text_rect = text_surface.get_rect()
+            bar.blit(text_surface, text_rect)
             btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
+        return bar
+
+    def create_item_menu(self, player):
+        bar = pygame.Surface((self.DISPLAY_W, self.DISPLAY_H//10), pygame.SRCALPHA)
+        font = pygame.font.Font(self.font_name, self.DISPLAY_H//32)
+        bar.fill((0, 0, 0, 0))
+        btn_offset = bar.get_width() // len(self.item_options)
+        for item in self.item_options:
+            if combatItems.itemDict[item] in player.inventory:
+                text_surface = font.render(btn, True, self.WHITE)
+                text_rect = text_rect = text_surface.get_rect(midbottom=(btn_offset, bar.get_height()))
+                self.item_buttons.append(text_rect)
+                bar.blit(text_surface, text_rect)
+                btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
+        return bar
+
+    def create_combat_menu(self, options, buttons):
+        bar = pygame.Surface((self.DISPLAY_W, self.DISPLAY_H//10), pygame.SRCALPHA)
+        font = pygame.font.Font(self.font_name, self.DISPLAY_H//32)
+        bar.fill((0, 0, 0, 0))
+        btn_offset = bar.get_width() // len(options)
+        for btn in options:
+            text_surface = font.render(btn, True, self.WHITE)
+            text_rect = text_rect = text_surface.get_rect(midbottom=(btn_offset, bar.get_height()))
+            buttons.append(text_rect)
+            bar.blit(text_surface, text_rect)
+            btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
+        return bar
 
     def select_combat_option(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:

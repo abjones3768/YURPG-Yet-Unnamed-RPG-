@@ -85,23 +85,22 @@ class Renderer:
                     i = row * dungeon.map_width + col
                     x = (col * tile_size) - (self.vp_pos[0] * tile_size)
                     y = (row * tile_size) - (self.vp_pos[1] * tile_size)
+                    tiletype = dungeon.tiles[i]
                     if sc.tile_visibility[i]:
-                        tiletype = dungeon.tiles[i]
-                        if tiletype == constants.FLOOR or tiletype == constants.WALL or tiletype == constants.WATER:
-                            use_sprite = True
-                        elif dungeon.tiles[i] != constants.ENEMY:
+                        if tiletype == constants.SHADOW or tiletype == constants.EXIT:
                             color = constants.tile_colors[tilemap[i]]
-                    else:
-                        color = constants.tile_colors[constants.SHADOW]
-                    if use_sprite:
-                        surface.blit(images[tiletype], (x + self.x_offset, y + self.y_offset))
-                    else:
-                        pygame.draw.rect(surface, color, pygame.Rect(x + self.x_offset, y + self.y_offset, tile_size, tile_size))
+                            pygame.draw.rect(surface, color, pygame.Rect(x + self.x_offset, y + self.y_offset, tile_size, tile_size))
+                        else:
+                            if tiletype == constants.ENEMY_CORPSE:
+                                surface.blit(images[constants.ENEMY], (x + self.x_offset, y + self.y_offset))
+                            else:
+                                surface.blit(images[tiletype], (x + self.x_offset, y + self.y_offset))
+                        
             for enemy in battle_grid.actors:
                 en_x = enemy.x - (self.vp_pos[0] * tile_size)
                 en_y = enemy.y - (self.vp_pos[1] * tile_size)
-                pygame.draw.rect(surface, constants.tile_colors[constants.ENEMY], pygame.Rect(en_x + self.x_offset, en_y + self.y_offset, tile_size, tile_size))
-            pygame.draw.rect(surface, constants.tile_colors[p.job], pygame.Rect(px + self.x_offset, py + self.y_offset, tile_size, tile_size))
+                surface.blit(images[constants.ENEMY], (en_x + self.x_offset, en_y + self.y_offset))
+            surface.blit(images[p.job], (px + self.x_offset, py + self.y_offset))
     
         # ISOMETRIC MODE
         else:
@@ -141,9 +140,10 @@ class Renderer:
                 battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
                     if actor is p:
-                        battle_grid.foreground.blit(iso_images[p.job], (player_pos))
+                        battle_grid.foreground.blit(iso_images[p.job-1], (player_pos[0]+2, player_pos[1]-8))
                     else:
-                        battle_grid.foreground.blit(iso_images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
+                        pos = self.get_iso_actor_pos(room, actor)
+                        battle_grid.foreground.blit(iso_images[7], (pos[0]+2, pos[1]-8))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
             elif moved_status:
@@ -168,9 +168,10 @@ class Renderer:
                 battle_grid.actors.sort(key=lambda actor: actor.cur_tile)
                 for actor in battle_grid.actors:
                     if actor is p:
-                        battle_grid.foreground.blit(iso_images[p.job], (player_pos))
+                        battle_grid.foreground.blit(iso_images[p.job-1], (player_pos[0]+2, player_pos[1]-8))
                     else:
-                        battle_grid.foreground.blit(iso_images[constants.ENEMY], self.get_iso_actor_pos(room, actor))
+                        pos = self.get_iso_actor_pos(room, actor)
+                        battle_grid.foreground.blit(iso_images[7], (pos[0]+2, pos[1]-8))
                 surface.blit(battle_grid.background, (0, 0))
                 surface.blit(battle_grid.foreground, (0, 0))
             else:
