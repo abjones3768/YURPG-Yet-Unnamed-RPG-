@@ -39,7 +39,7 @@ class Menu:
         self.combat_buttons = []
         self.item_buttons = []
         self.player_ref = None
-        self.item_select = None
+        self.item_select = self.create_combat_menu(self.item_options, self.item_buttons)
         self.combat_bar = self.create_combat_menu(self.combat_options, self.combat_buttons)
         self.magic_select = self.create_combat_menu(self.magic_options, self.magic_buttons)
         self.hovering = False
@@ -327,22 +327,8 @@ class Menu:
         for btn in options:
             text_surface = font.render(btn, True, self.WHITE)
             text_rect = text_surface.get_rect()
-            bar.blit(text_surface, text_rect)
+            bar.blit(text_surface, (btn_offset, 0))
             btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
-        return bar
-
-    def create_item_menu(self, player):
-        bar = pygame.Surface((self.DISPLAY_W, self.DISPLAY_H//10), pygame.SRCALPHA)
-        font = pygame.font.Font(self.font_name, self.DISPLAY_H//32)
-        bar.fill((0, 0, 0, 0))
-        btn_offset = bar.get_width() // len(self.item_options)
-        for item in self.item_options:
-            if combatItems.itemDict[item] in player.inventory:
-                text_surface = font.render(btn, True, self.WHITE)
-                text_rect = text_rect = text_surface.get_rect(midbottom=(btn_offset, bar.get_height()))
-                self.item_buttons.append(text_rect)
-                bar.blit(text_surface, text_rect)
-                btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
         return bar
 
     def create_combat_menu(self, options, buttons):

@@ -654,7 +654,7 @@ while run:
                     screen.blit(menu.magic_select, (0, 0))
             elif action == ITEMS:
                 if gettingSpell:
-                    screen.blit(menu.create_item_menu(player), (0, 0))
+                    screen.blit(menu.item_select, (0, 0))
 
         # Tells renderer to run shadowcaster if player moves in top down mode,
         # or to update the battle grid after actor movement if in combat
