@@ -313,13 +313,15 @@ class Menu:
         btn_offset = self.combat_menu.get_width() // len(self.combat_options)
         for btn in self.combat_options:
             text_surface = font.render(btn, True, self.WHITE)
-            self.combat_buttons.append(text_surface.get_rect())
-            self.combat_menu.blit(text_surface, (btn_offset, (self.combat_menu.get_height() - text_surface.get_height()) // 2))
+            text_rect = text_rect = text_surface.get_rect(midbottom=(btn_offset, self.combat_menu.get_height()))
+            self.combat_buttons.append(text_rect)
+            self.combat_menu.blit(text_surface, text_rect)
             btn_offset += text_surface.get_width() + self.DISPLAY_W//constants.TILE_SIZE
 
     def select_combat_option(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             for i, button in enumerate(self.combat_buttons):
                 if button.collidepoint(event.pos):
-                    return i
+                    print(i+1)
+                    return i+1
             return None
